@@ -49,7 +49,15 @@ parameters:
     redis_password: null
 PARAMS
 
-echo "Installing PHP dependencies..."
+echo "Copying cached dependencies..."
+if [ -d /opt/wallabag-deps/vendor ]; then
+    cp -rn /opt/wallabag-deps/vendor ./vendor 2>/dev/null || true
+fi
+if [ -d /opt/wallabag-deps/node_modules ]; then
+    cp -rn /opt/wallabag-deps/node_modules ./node_modules 2>/dev/null || true
+fi
+
+echo "Running composer install (using cache)..."
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-progress
 
 echo "Running database migrations..."
@@ -58,8 +66,7 @@ php bin/console doctrine:migrations:migrate --no-interaction --env=dev
 echo "Creating default admin user..."
 php bin/console fos:user:create --super-admin admin admin@wallabag.org preview --env=dev 2>/dev/null || true
 
-echo "Installing frontend assets..."
-yarn install --frozen-lockfile
+echo "Building frontend assets..."
 yarn build:dev
 
 echo "Starting wallabag dev server on port 443..."
