@@ -12,7 +12,7 @@ su - postgres -c "psql -c \"CREATE USER wallabag WITH PASSWORD 'wallapass';\"" 2
 su - postgres -c "psql -c \"CREATE DATABASE wallabag OWNER wallabag;\"" 2>/dev/null || true
 
 echo "Writing wallabag config..."
-cat > app/config/parameters.yml << 'PARAMS'
+cat > app/config/parameters.yml << PARAMS
 parameters:
     database_driver: pdo_pgsql
     database_host: 127.0.0.1
@@ -24,7 +24,7 @@ parameters:
     database_table_prefix: wallabag_
     database_socket: null
     database_charset: utf8
-    domain_name: https://placeholder.e2b.dev
+    domain_name: ${PREVIEW_URL:-https://localhost}
     server_name: wallabag
     mailer_dsn: null://null
     locale: en
