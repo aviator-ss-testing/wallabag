@@ -70,6 +70,6 @@ echo "Building frontend assets..."
 yarn build:dev
 
 echo "Starting wallabag dev server on port 443..."
-php bin/console server:run 0.0.0.0:443 --env=dev &
+nohup php bin/console server:run 0.0.0.0:443 --env=dev > /tmp/wallabag-server.log 2>&1 &
 
 echo "Preview server started. Login with admin / preview"
