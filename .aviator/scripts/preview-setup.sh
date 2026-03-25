@@ -64,7 +64,10 @@ echo "Running database migrations..."
 php bin/console doctrine:migrations:migrate --no-interaction --env=dev
 
 echo "Creating default admin user..."
-php bin/console fos:user:create --super-admin admin admin@wallabag.org preview --env=dev 2>/dev/null || true
+ADMIN_USER="${WALLABAG_ADMIN_USER:-admin}"
+ADMIN_EMAIL="${WALLABAG_ADMIN_EMAIL:-admin@wallabag.org}"
+ADMIN_PASS="${WALLABAG_ADMIN_PASSWORD:-preview}"
+php bin/console fos:user:create --super-admin "$ADMIN_USER" "$ADMIN_EMAIL" "$ADMIN_PASS" --env=dev 2>/dev/null || true
 
 echo "Building frontend assets..."
 yarn build:dev
@@ -72,4 +75,4 @@ yarn build:dev
 echo "Starting wallabag dev server on port 443..."
 nohup php bin/console server:run 0.0.0.0:443 --env=dev > /tmp/wallabag-server.log 2>&1 &
 
-echo "Preview server started. Login with admin / preview"
+echo "Preview server started. Login with $ADMIN_USER / $ADMIN_PASS"
