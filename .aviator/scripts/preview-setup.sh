@@ -23,8 +23,13 @@ export APP_DEBUG=0
 export SYMFONY_ENV=prod
 
 # PREVIEW_URL is injected by Aviator's preview system with the sandbox's public
-# URL. Wallabag uses DOMAIN_NAME for generating asset URLs and redirects.
+# URL. Wallabag uses two env vars for URL generation:
+#   - DOMAIN_NAME: used by nginx/docker for server_name
+#   - WALLABAG_BASE_URL: used by Symfony (services.yml, config.yml) for
+#     generating absolute URLs, asset paths, and redirects. This is the one
+#     that matters for avoiding CORS issues and broken links in the preview.
 export DOMAIN_NAME="${PREVIEW_URL:-http://127.0.0.1:8000}"
+export WALLABAG_BASE_URL="${PREVIEW_URL:-http://127.0.0.1:8000}"
 
 cd /code
 
