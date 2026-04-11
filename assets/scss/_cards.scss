@@ -115,15 +115,38 @@ main {
   padding: 0.875rem 1rem 0.75rem;
 }
 
+.wbg-card__domain {
+  font-size: 0.8125rem;
+  color: variables.$color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.25rem;
+
+  a {
+    color: inherit;
+
+    &:hover {
+      color: variables.$color-text;
+    }
+  }
+}
+
 .wbg-card__title {
   color: variables.$color-accent;
   font-weight: 500;
   font-size: 1rem;
+  line-height: 1.4;
+  // Reserve exactly 2 lines of height so all cards are uniform regardless
+  // of title length. Single-line titles still occupy 2 lines of space;
+  // titles longer than 2 lines get clamped with an ellipsis.
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 2.8rem; // 1rem × 1.4 line-height × 2 lines
   text-decoration: none;
+  word-break: break-word;
 
   &:hover {
     text-decoration: underline;
