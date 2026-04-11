@@ -24,7 +24,11 @@ a {
   color: variables.$color-accent;
 }
 
-main,
+main {
+  height: 100%;
+  margin-left: 0 !important;
+}
+
 #content,
 .valign-wrapper {
   height: 100%;
