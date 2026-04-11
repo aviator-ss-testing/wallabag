@@ -85,11 +85,11 @@ php bin/console cache:clear --env=prod --no-debug 2>&1 | tail -3 || true
 t "Cache warmed"
 
 t "Starting php-fpm..."
-php-fpm --daemonize > /var/log/app/php-fpm.log 2>&1
+setsid php-fpm --daemonize < /dev/null > /var/log/app/php-fpm.log 2>&1
 t "php-fpm started"
 
 t "Starting nginx..."
-nginx -g 'daemon on;' > /var/log/app/nginx.log 2>&1
+setsid nginx < /dev/null > /var/log/app/nginx.log 2>&1
 t "Nginx started"
 
 t "Preview environment ready."
