@@ -57,18 +57,9 @@
         <form id="form_mass_action" name="form_mass_action" action="{{ path('mass_action', {redirect: current_path}) }}" method="post">
             <input type="hidden" name="token" value="{{ csrf_token('mass-action') }}"/>
         </form>
-        <div class="results" data-entries-navigation-target="paginationWrapper">
-            <div class="nb-results">
+        <div class="wbg-count-bar" data-entries-navigation-target="paginationWrapper">
+            <div class="wbg-count-bar__left">
                 {{ 'entry.list.number_on_the_page'|trans({'%count%': entries.count}) }}
-                {% if entries.count > 0 %}
-                    <form action="{{ path('switch_view_mode', {redirect: current_path}) }}" method="post" class="inline-block">
-                        <input type="hidden" name="token" value="{{ csrf_token('switch-view-mode') }}"/>
-
-                        <button type="submit" class="btn-link results-item">
-                            <i class="material-icons">{% if list_mode == 0 %}view_list{% else %}view_module{% endif %}</i>
-                        </button>
-                    </form>
-                {% endif %}
                 {% if entries.count > 0 and is_granted('EDIT_ENTRIES') %}
                     <label for="mass-action-inputs-displayed" class="mass-action-toggle results-item" data-controller="materialize--tooltip" data-materialize--tooltip-position-value="right" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ 'entry.list.toggle_mass_action'|trans }}"><i class="material-icons">library_add_check</i></label>
                 {% endif %}
@@ -76,17 +67,19 @@
                     {% include "Entry/_feed_link.html.twig" %}
                 {% endif %}
             </div>
-            {% if current_route == 'search' and is_granted('CREATE_TAGS') %}
-                <form action="{{ path('tag_this_search', {'filter': searchTerm, 'currentRoute': app.request.get('currentRoute'), redirect: current_path}) }}" method="post">
-                    <input type="hidden" name="token" value="{{ csrf_token('tag-this-search') }}"/>
-
-                    <button type="submit" class="btn-link" title="{{ 'entry.list.assign_search_tag'|trans }}">{{ 'entry.list.assign_search_tag'|trans }}</button>
-                </form>
-            {% endif %}
-            {% if entries.getNbPages > 1 %}
-                {{ pagerfanta(entries, 'default_wallabag') }}
-            {% endif %}
+            <div class="wbg-count-bar__right">
+                {% if entries.getNbPages > 1 %}
+                    {{ pagerfanta(entries, 'default_wallabag') }}
+                {% endif %}
+            </div>
         </div>
+        {% if current_route == 'search' and is_granted('CREATE_TAGS') %}
+            <form action="{{ path('tag_this_search', {'filter': searchTerm, 'currentRoute': app.request.get('currentRoute'), redirect: current_path}) }}" method="post">
+                <input type="hidden" name="token" value="{{ csrf_token('tag-this-search') }}"/>
+
+                <button type="submit" class="btn-link" title="{{ 'entry.list.assign_search_tag'|trans }}">{{ 'entry.list.assign_search_tag'|trans }}</button>
+            </form>
+        {% endif %}
 
         {% if entries.count > 0 %}
             <input id="mass-action-inputs-displayed" class="toggle-checkbox" type="checkbox" />
