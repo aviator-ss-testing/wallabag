@@ -157,6 +157,20 @@
     }
   }
 
+  // Sidebar dark overrides
+  .sidenav {
+    background: #1d1d1d;
+    border-right-color: #2a2a2a;
+  }
+
+  .sidenav li.active > a {
+    background: rgba(23, 169, 153, 0.15);
+  }
+
+  .sidenav-wordmark {
+    color: #dfdfdf;
+  }
+
   // Login page dark overrides
   body.login-page {
     background: #101010;
