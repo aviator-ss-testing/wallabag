@@ -28,6 +28,128 @@ main {
   }
 }
 
+/* ==========================================================================
+   New wbg-card (grid view)
+   ========================================================================== */
+
+.wbg-card {
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(23, 169, 153, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.wbg-card__image {
+  position: relative;
+  padding-top: 62.5%;
+  background: variables.$color-border;
+}
+
+.wbg-card-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+
+  img {
+    width: 4rem;
+    opacity: 0.15;
+  }
+}
+
+.wbg-card__body {
+  padding: 0.875rem 1rem 0.75rem;
+}
+
+.wbg-card__title {
+  color: variables.$color-accent;
+  font-weight: 500;
+  font-size: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wbg-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+}
+
+.wbg-card__divider {
+  border: none;
+  border-top: 1px solid variables.$color-border;
+  margin: 0.75rem 0;
+}
+
+/* ==========================================================================
+   New wbg-list-card (list view)
+   ========================================================================== */
+
+.wbg-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius-sm;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: rgba(23, 169, 153, 0.5);
+  }
+
+  &.archived {
+    opacity: 0.5;
+  }
+}
+
+.wbg-list-thumb {
+  width: 3rem;
+  height: 3rem;
+  border-radius: variables.$radius-sm;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: variables.$color-border;
+}
+
+.wbg-list-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.25rem;
+}
+
+.wbg-list-meta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+}
+
+/* ==========================================================================
+   Legacy Materialize-based card classes (preserved for other templates)
+   ========================================================================== */
+
 .card {
   .card-content {
     padding-bottom: 12px;
@@ -313,7 +435,6 @@ a.original:not(.waves-effect) {
   height: 100%;
   flex-direction: column;
 }
-
 
 .tools {
   display: flex;
