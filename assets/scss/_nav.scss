@@ -126,6 +126,13 @@ main {
   align-items: center;
 }
 
+/* Apply button styles to direct children of wbg-topbar__right so icons
+   render as 2.25rem square tap targets. The right cluster contains a mix
+   of direct <a>/<button>/<form> elements and legacy <li> wrappers, so we
+   target both. */
+.wbg-topbar__right > a,
+.wbg-topbar__right > button,
+.wbg-topbar__right > form > button,
 .wbg-topbar__right li > a,
 .wbg-topbar__right li > button,
 .wbg-topbar__right li > form > button {
@@ -138,14 +145,17 @@ main {
   border-radius: 0.375rem;
   background: transparent;
   border: none;
-  color: #7a7366;
+  color: variables.$color-text-muted;
   cursor: pointer;
 }
 
+.wbg-topbar__right > a:hover,
+.wbg-topbar__right > button:hover,
+.wbg-topbar__right > form > button:hover,
 .wbg-topbar__right li > a:hover,
 .wbg-topbar__right li > button:hover,
 .wbg-topbar__right li > form > button:hover {
-  color: #2a2620;
+  color: variables.$color-text;
   background: rgba(0, 0, 0, 0.04);
 }
 

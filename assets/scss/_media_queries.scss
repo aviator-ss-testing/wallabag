@@ -9,12 +9,8 @@
 }
 
 @media only screen and (min-width: 992px) {
-  nav,
-  .index main,
-  footer {
-    padding-left: 240px;
-  }
-
+  /* Leftover Materialize sidenav spacing — the sidenav has been removed so
+     main content should span the full viewport width. */
   .pagination {
     margin-left: auto;
   }
