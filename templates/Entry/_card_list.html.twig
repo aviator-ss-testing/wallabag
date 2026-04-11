@@ -1,7 +1,7 @@
-<div class="card-stacked{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
+<div class="card-stacked entry-card--list{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
     {% include "Entry/Card/_mass_checkbox.html.twig" with {'entry': entry} only %}
     {% if app.user.config.displayThumbnails %}
-    <div class="card-preview">
+    <div class="card-thumb">
         {% set preview_class_modifier = entry.previewPicture ? '' : ' preview--default' %}
         {% if is_granted('VIEW', entry) %}
             <a href="{{ path('view', {'id': entry.id}) }}">
@@ -12,7 +12,11 @@
         {% endif %}
     </div>
     {% endif %}
-    {% include "Entry/Card/_content.html.twig" with {'entry': entry, 'withMetadata': true, 'subClass': 'metadata'} only %}
+    {% include "Entry/Card/_content.html.twig" with {'entry': entry, 'subClass': 'original grey-text'} only %}
+
+    <div class="card-list-time">
+        {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+    </div>
 
     {% set current_path = app.request.requesturi %}
 
