@@ -22,6 +22,16 @@
 {% endblock %}
 
 {% block nav_panel_extra_actions %}
+    {% if entries is defined and entries.count > 0 %}
+        <li>
+            <form action="{{ path('switch_view_mode', {redirect: app.request.requestUri}) }}" method="post" class="inline-block">
+                <input type="hidden" name="token" value="{{ csrf_token('switch-view-mode') }}"/>
+                <button type="submit" class="btn-link" aria-label="{{ app.user.config.listMode == 0 ? 'Switch to list view' : 'Switch to grid view' }}" data-controller="materialize--tooltip" data-materialize--tooltip-position-value="bottom" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ app.user.config.listMode == 0 ? 'Switch to list view' : 'Switch to grid view' }}">
+                    <i class="material-icons">{% if app.user.config.listMode == 0 %}view_list{% else %}view_module{% endif %}</i>
+                </button>
+            </form>
+        </li>
+    {% endif %}
     {% if active_route %}
         <li>
             <a class="waves-effect" data-controller="materialize--tooltip" data-materialize--tooltip-position-value="bottom" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ 'menu.top.random_entry'|trans }}" href="{{ path('random_entry', {'type': active_route}) }}">
@@ -57,32 +67,22 @@
         <form id="form_mass_action" name="form_mass_action" action="{{ path('mass_action', {redirect: current_path}) }}" method="post">
             <input type="hidden" name="token" value="{{ csrf_token('mass-action') }}"/>
         </form>
-        <div class="results" data-entries-navigation-target="paginationWrapper">
+        <div class="entry-count-bar" data-entries-navigation-target="paginationWrapper">
             <div class="nb-results">
                 {{ 'entry.list.number_on_the_page'|trans({'%count%': entries.count}) }}
-                {% if entries.count > 0 %}
-                    <form action="{{ path('switch_view_mode', {redirect: current_path}) }}" method="post" class="inline-block">
-                        <input type="hidden" name="token" value="{{ csrf_token('switch-view-mode') }}"/>
-
-                        <button type="submit" class="btn-link results-item">
-                            <i class="material-icons">{% if list_mode == 0 %}view_list{% else %}view_module{% endif %}</i>
-                        </button>
-                    </form>
-                {% endif %}
                 {% if entries.count > 0 and is_granted('EDIT_ENTRIES') %}
                     <label for="mass-action-inputs-displayed" class="mass-action-toggle results-item" data-controller="materialize--tooltip" data-materialize--tooltip-position-value="right" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ 'entry.list.toggle_mass_action'|trans }}"><i class="material-icons">library_add_check</i></label>
                 {% endif %}
                 {% if app.user.config.feedToken %}
                     {% include "Entry/_feed_link.html.twig" %}
                 {% endif %}
+                {% if current_route == 'search' and is_granted('CREATE_TAGS') %}
+                    <form action="{{ path('tag_this_search', {'filter': searchTerm, 'currentRoute': app.request.get('currentRoute'), redirect: current_path}) }}" method="post" class="inline-block">
+                        <input type="hidden" name="token" value="{{ csrf_token('tag-this-search') }}"/>
+                        <button type="submit" class="btn-link" title="{{ 'entry.list.assign_search_tag'|trans }}">{{ 'entry.list.assign_search_tag'|trans }}</button>
+                    </form>
+                {% endif %}
             </div>
-            {% if current_route == 'search' and is_granted('CREATE_TAGS') %}
-                <form action="{{ path('tag_this_search', {'filter': searchTerm, 'currentRoute': app.request.get('currentRoute'), redirect: current_path}) }}" method="post">
-                    <input type="hidden" name="token" value="{{ csrf_token('tag-this-search') }}"/>
-
-                    <button type="submit" class="btn-link" title="{{ 'entry.list.assign_search_tag'|trans }}">{{ 'entry.list.assign_search_tag'|trans }}</button>
-                </form>
-            {% endif %}
             {% if entries.getNbPages > 1 %}
                 {{ pagerfanta(entries, 'default_wallabag') }}
             {% endif %}
@@ -121,7 +121,7 @@
         {% endif %}
 
         {% if entries.getNbPages > 1 %}
-            <div class="results">
+            <div class="entry-count-bar entry-count-bar--bottom">
                 {{ pagerfanta(entries, 'default_wallabag') }}
             </div>
         {% endif %}
