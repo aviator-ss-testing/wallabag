@@ -156,4 +156,38 @@
       background-color: #101010;
     }
   }
+
+  .wbg-topbar {
+    background: #1e1c19;
+    border-color: #2e2b27;
+  }
+
+  .wbg-filter-menu,
+  .wbg-filter-menu .dropdown-content {
+    background: #1e1c19;
+    border-color: #2e2b27;
+  }
+
+  .wbg-count-bar {
+    background: #181613;
+    border-color: #2e2b27;
+  }
+
+  .wbg-card {
+    background: #1e1c19;
+    border-color: #2e2b27;
+  }
+
+  .wbg-list-card {
+    background: #1e1c19;
+    border-color: #2e2b27;
+  }
+
+  .wbg-card-placeholder {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  body.login {
+    background: #181613;
+  }
 }
