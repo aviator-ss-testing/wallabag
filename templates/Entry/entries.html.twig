@@ -22,6 +22,21 @@
 {% endblock %}
 
 {% block nav_panel_extra_actions %}
+    {% set nextOrder = (order is defined and order == 'asc') ? 'desc' : 'asc' %}
+    {% set sortParams = app.request.query.all|merge({'order': nextOrder}) %}
+    {% set sortHref = app.request.pathInfo ~ '?' ~ sortParams|url_encode %}
+    <li>
+        <a href="{{ sortHref }}"
+           title="{{ (order is defined and order == 'asc') ? 'entry.list.sort_newest_first'|trans : 'entry.list.sort_oldest_first'|trans }}"
+           aria-label="{{ (order is defined and order == 'asc') ? 'entry.list.sort_newest_first'|trans : 'entry.list.sort_oldest_first'|trans }}"
+           {% if order is defined and order == 'asc' %}aria-pressed="true"{% endif %}
+           data-controller="materialize--tooltip"
+           data-materialize--tooltip-position-value="bottom"
+           data-materialize--tooltip-enter-delay-value="50"
+           data-tooltip="{{ (order is defined and order == 'asc') ? 'entry.list.sort_newest_first'|trans : 'entry.list.sort_oldest_first'|trans }}">
+            {% if order is defined and order == 'asc' %}<i class="material-icons">arrow_upward</i>{% else %}<i class="material-icons">arrow_downward</i>{% endif %}
+        </a>
+    </li>
     {% if active_route %}
         <li>
             <a class="waves-effect" data-controller="materialize--tooltip" data-materialize--tooltip-position-value="bottom" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ 'menu.top.random_entry'|trans }}" href="{{ path('random_entry', {'type': active_route}) }}">
@@ -276,6 +291,7 @@
                 </div>
             </div>
 
+            <input type="hidden" name="order" value="{{ order is defined ? order : 'desc' }}">
         </form>
     </div>
     {% endif %}
