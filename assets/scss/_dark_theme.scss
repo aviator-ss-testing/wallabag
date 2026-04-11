@@ -156,4 +156,54 @@
       background-color: #101010;
     }
   }
+
+  .article-view {
+    background-color: #101010;
+  }
+
+  .article-rail,
+  .article-mobile-bar {
+    background-color: #131716;
+    border-color: #222;
+  }
+
+  .article-rail__btn {
+    color: #9e9e9e;
+
+    &:hover {
+      color: #dfdfdf;
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  article.article__body,
+  .article__header h1,
+  .article__meta,
+  .article__footer {
+    color: #dfdfdf;
+  }
+
+  article.article__body a {
+    color: #4ecdc4;
+  }
+
+  article.article__body code,
+  article.article__body pre {
+    background-color: #1d1d1d;
+    border-color: #222;
+  }
+
+  article.article__body blockquote {
+    border-left-color: #4ecdc4;
+    color: #9e9e9e;
+  }
+
+  .article__footer {
+    border-top-color: #222;
+  }
+
+  .article__tags .chip-label {
+    background-color: rgba(23, 169, 153, 0.15);
+    color: #4ecdc4;
+  }
 }
