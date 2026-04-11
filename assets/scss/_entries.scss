@@ -168,17 +168,14 @@
     margin-left: 10px;
   }
 
-  li.active span {
-    background: variables.$color-accent;
-    color: variables.$color-primary-foreground;
-    width: 1.75rem;
-    height: 1.75rem;
-    line-height: 1.75rem;
+  li.active {
+    background-color: variables.$color-accent;
     border-radius: variables.$radius-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
+  }
+
+  li.active span {
+    background: transparent;
+    color: variables.$color-primary-foreground;
   }
 }
 
