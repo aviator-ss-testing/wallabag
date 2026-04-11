@@ -1,21 +1,23 @@
 # Wallabag Preview Environment Docker image for e2b sandboxes.
 #
 # Design notes:
-# - Single-stage build so caches are in the same environment as runtime.
+# - Single-stage build so caches match between build-time and runtime.
 # - .git is shipped with the image (via Dockerfile.dockerignore) so runtime
 #   git fetch is an incremental delta, not a full clone.
-# - SQLite seed DB with ~13 articles baked in so the app has content on first boot.
-# - Runs in APP_ENV=prod at runtime so no Symfony debug toolbar.
+# - SQLite seed DB with ~13 articles baked in so the app has content.
+# - Uses Symfony's built-in dev server (`bin/console server:run`) — same
+#   as local development. No nginx, no php-fpm, no user permission
+#   issues. Toolbar is disabled via app/config/config_dev.yml.
 
 FROM php:8.2-fpm-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG NODE_VERSION=20
 
-# System packages + Node.js for frontend build
+# System packages + Node.js
 RUN apt-get update && apt-get install -y \
       ca-certificates curl gnupg lsb-release git git-lfs openssl \
-      redis-server nginx \
+      redis-server \
     && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get update && apt-get install -y \
       libicu-dev libpq-dev libxml2-dev libpng-dev libjpeg-dev libwebp-dev \
@@ -61,31 +63,18 @@ COPY . /code/
 # nothing relevant changed).
 RUN git -C /code rev-parse HEAD > /code/.preview-image-sha
 
-# Install PHP dependencies. APP_ENV=prod so the post-install cache:clear hook
-# doesn't try to load DebugBundle/WebProfilerBundle (which are dev-only deps
-# and not installed because of --no-dev).
-RUN APP_ENV=prod composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Install PHP dependencies (including dev deps — we run in --env=dev at runtime).
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Install Node deps and build frontend (dev build — much faster than prod and
-# visually identical for wallabag's simple assets).
+# Install Node deps and build frontend
 RUN yarn install --frozen-lockfile && yarn build:dev
 
-# Copy the seed sqlite DB into the data dir (overwrites any existing)
+# Copy the seed sqlite DB into the data dir
 RUN mkdir -p /code/data/db \
     && cp /code/docker/preview/seed.sqlite /code/data/db/wallabag.sqlite \
     && chmod 666 /code/data/db/wallabag.sqlite
 
-# Nginx config for php-fpm
-COPY docker/preview/nginx.conf /etc/nginx/sites-available/default
-RUN rm -f /etc/nginx/sites-enabled/default \
-    && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
-# Required directories
-RUN mkdir -p /var/log/app /run/php /code/var/cache /code/var/logs \
-    && chown -R www-data:www-data /code/var /code/data
-
-# Pre-warm the Symfony prod cache so startup is fast
-RUN APP_ENV=prod APP_DEBUG=0 SYMFONY_ENV=prod \
-    php bin/console cache:warmup --env=prod --no-debug || true
+# Required directories for runtime logs
+RUN mkdir -p /var/log/app
 
 EXPOSE 8000
