@@ -17,6 +17,12 @@ t "Starting wallabag preview setup"
 # but the repo may have been cloned as a different user).
 chown -R user:user /code/ 2>/dev/null || true
 
+# php-fpm runs as www-data and needs to write caches/logs/sqlite — chown the
+# dirs it touches so it can operate without permission errors.
+mkdir -p /code/var/cache /code/var/logs /code/data/db
+chown -R www-data:www-data /code/var /code/data
+chmod -R g+w /code/var /code/data
+
 # Set up the wallabag environment for prod so the Symfony debug toolbar is off.
 export APP_ENV=prod
 export APP_DEBUG=0
@@ -54,11 +60,11 @@ php bin/console cache:clear --env=prod --no-debug 2>&1 | tail -3 || true
 t "Cache warmed"
 
 t "Starting php-fpm..."
-setsid php-fpm --daemonize
+php-fpm --daemonize > /var/log/app/php-fpm.log 2>&1
 t "php-fpm started"
 
 t "Starting nginx..."
-setsid nginx
+nginx -g 'daemon on;' > /var/log/app/nginx.log 2>&1
 t "Nginx started"
 
 t "Preview environment ready."
