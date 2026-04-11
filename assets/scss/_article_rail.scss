@@ -1,0 +1,97 @@
+@use "variables" as *;
+
+// ==========================================================================
+// Article View — Rail and Mobile Bar
+// ==========================================================================
+
+.article-view {
+  display: flex;
+  min-height: 100%;
+  background: $color-bg;
+}
+
+// -------------------------------------------------------------------------
+// Desktop rail (icon-only fixed-height sidebar)
+// -------------------------------------------------------------------------
+
+.article-rail {
+  display: none;
+
+  @media screen and (min-width: 993px) {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 3.5rem;
+    background: $color-surface;
+    border-right: 1px solid $color-border;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
+  @media screen and (min-width: 1200px) {
+    width: 4rem;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Rail buttons
+// -------------------------------------------------------------------------
+
+.article-rail__btn,
+a.article-rail__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: $color-text-muted;
+  background: transparent;
+  border: none;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $color-text;
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &.--active {
+    color: $color-accent;
+    background: rgba(23, 169, 153, 0.1);
+  }
+}
+
+// -------------------------------------------------------------------------
+// Rail section divider
+// -------------------------------------------------------------------------
+
+.article-rail__section-end {
+  width: 100%;
+  border-bottom: 1px solid $color-border;
+  margin: 0.125rem 0;
+}
+
+// -------------------------------------------------------------------------
+// Mobile bar (sticky top bar, hidden on desktop)
+// -------------------------------------------------------------------------
+
+.article-mobile-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: $color-surface;
+  border-bottom: 1px solid $color-border;
+
+  @media screen and (min-width: 993px) {
+    display: none;
+  }
+}
