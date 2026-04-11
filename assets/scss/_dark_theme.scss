@@ -226,4 +226,23 @@
       color: #dfdfdf;
     }
   }
+
+  // Grid card dark overrides
+  .entry-card--grid {
+    background: #1d1d1d;
+    border-color: #2a2a2a;
+
+    &:hover {
+      border-color: rgba(23, 169, 153, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .card-divider {
+    border-top-color: #2a2a2a;
+  }
+
+  .card-image-wrap .preview--default {
+    background-color: #131313;
+  }
 }

@@ -1,6 +1,6 @@
-<div class="card entry-card{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
+<div class="card entry-card entry-card--grid{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
     <div class="card-body">
-        <div class="card-fullimage">
+        <div class="card-image-wrap">
             <ul class="card-entry-labels">
             {% for tag in entry.tags|slice(0, 3) %}
                 <li title="{{ tag.label }}"><a href="{{ path('tag_entries', {'slug': tag.slug}) }}">{{ tag.label }}</a></li>

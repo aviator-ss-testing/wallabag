@@ -319,3 +319,129 @@ a.original:not(.waves-effect) {
   display: flex;
   gap: 10px;
 }
+
+// Grid card styles
+.entry-card--grid {
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(23, 169, 153, 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.card-image-wrap {
+  position: relative;
+  padding-top: 62.5%;
+  overflow: hidden;
+
+  a {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .preview {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #efefef;
+  }
+
+  .preview--default {
+    background-size: 4rem;
+    background-position: center;
+    background-color: variables.$color-bg;
+    filter: opacity(0.3);
+  }
+}
+
+.card-title-link {
+  font-weight: 500;
+  font-size: 1rem;
+  color: variables.$color-accent;
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  &:hover {
+    text-decoration: underline;
+    color: variables.$color-accent;
+  }
+}
+
+.card-domain {
+  font-size: 0.875rem;
+  color: variables.$color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.card-divider {
+  border: none;
+  border-top: 1px solid variables.$color-border;
+  margin: 0.75rem 0;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.card-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-meta-right {
+  display: flex;
+  align-items: center;
+}
+
+.card-kebab {
+  .tools {
+    gap: 0;
+  }
+
+  .tool {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: variables.$color-text-muted;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: variables.$radius-sm;
+    padding: 0;
+    text-decoration: none;
+
+    i {
+      font-size: 1.1rem;
+    }
+  }
+
+  .tool--star:hover {
+    color: variables.$color-accent;
+  }
+
+  .tool--delete:hover {
+    color: variables.$color-destructive;
+  }
+}
