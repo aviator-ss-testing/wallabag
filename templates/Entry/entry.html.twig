@@ -119,121 +119,269 @@
 {% endblock %}
 
 {% block content %}
-    <div id="article" class="article" data-controller="scroll-storage" data-scroll-storage-entry-id-value="{{ entry.id }}" data-action="scroll@window->scroll-storage#saveScroll">
-        <header>
-            <h1>
-                <span{% if entry.language is defined and entry.language is not null %} lang="{{ entry.getHTMLLanguage() }}"{% endif %}>{{ entry.title|striptags|default('entry.default_title'|trans)|raw }}</span>
-                {% if is_granted('EDIT', entry) %}
-                    <a class="title-edit" href="{{ path('edit', {'id': entry.id}) }}" title="{{ 'entry.view.edit_title'|trans }}"><i class="material-icons grey-text">create</i></a>
+    <div class="article-view" data-controller="scroll-storage" data-scroll-storage-entry-id-value="{{ entry.id }}" data-action="scroll@window->scroll-storage#saveScroll">
+        <aside class="article-rail">
+            {# Back to list #}
+            <a href="{{ path('unread') }}" class="article-rail__btn" title="{{ 'entry.view.left_menu.back_to_homepage'|trans }}">
+                <i class="material-icons">arrow_back</i>
+            </a>
+
+            {# Copy link (original URL) #}
+            <a href="{{ entry.url|e }}" class="article-rail__btn" target="_blank" rel="noopener noreferrer" title="{{ 'entry.view.left_menu.view_original_article'|trans }}">
+                <i class="material-icons">link</i>
+            </a>
+
+            {# Reload content #}
+            {% if is_granted('RELOAD', entry) %}
+                <form action="{{ path('reload_entry', {'id': entry.id}) }}" method="post">
+                    <input type="hidden" name="token" value="{{ csrf_token('reload-entry') }}"/>
+                    <button type="submit" class="article-rail__btn" onclick="return confirm('{{ 'entry.confirm.reload'|trans|escape('js') }}')" title="{{ 'entry.view.left_menu.re_fetch_content'|trans }}">
+                        <i class="material-icons">refresh</i>
+                    </button>
+                </form>
+            {% endif %}
+
+            {# Archive toggle #}
+            {% if is_granted('ARCHIVE', entry) %}
+                <form action="{{ path('archive_entry', {'id': entry.id, redirect: current_path}) }}" method="post">
+                    <input type="hidden" name="token" value="{{ csrf_token('archive-entry') }}"/>
+                    <button type="submit" class="article-rail__btn{% if entry.isArchived %} --active{% endif %}" title="{{ (entry.isArchived == 0 ? 'entry.view.left_menu.set_as_read' : 'entry.view.left_menu.set_as_unread')|trans }}">
+                        <i class="material-icons">{% if entry.isArchived == 0 %}done{% else %}unarchive{% endif %}</i>
+                    </button>
+                </form>
+            {% endif %}
+
+            {# Star toggle #}
+            {% if is_granted('STAR', entry) %}
+                <form action="{{ path('star_entry', {'id': entry.id, redirect: current_path}) }}" method="post">
+                    <input type="hidden" name="token" value="{{ csrf_token('star-entry') }}"/>
+                    <button type="submit" class="article-rail__btn{% if entry.isStarred %} --active{% endif %}" title="{{ 'entry.view.left_menu.set_as_starred'|trans }}">
+                        <i class="material-icons">{% if entry.isStarred == 0 %}star_outline{% else %}star{% endif %}</i>
+                    </button>
+                </form>
+            {% endif %}
+
+            <div class="article-rail__section-end"></div>
+
+            {# Delete #}
+            {% if is_granted('DELETE', entry) %}
+                <form action="{{ path('delete_entry', {'id': entry.id, redirect: current_path}) }}" method="post">
+                    <input type="hidden" name="token" value="{{ csrf_token('delete-entry') }}"/>
+                    <button type="submit" class="article-rail__btn" onclick="return confirm('{{ 'entry.confirm.delete'|trans|escape('js') }}')" title="{{ 'entry.view.left_menu.delete'|trans }}">
+                        <i class="material-icons">delete</i>
+                    </button>
+                </form>
+            {% endif %}
+
+            {# Edit #}
+            {% if is_granted('EDIT', entry) %}
+                <a href="{{ path('edit', {'id': entry.id}) }}" class="article-rail__btn" title="{{ 'entry.view.edit_title'|trans }}">
+                    <i class="material-icons">create</i>
+                </a>
+            {% endif %}
+
+            {# Share #}
+            {% if craue_setting('share_public') or craue_setting('share_twitter') or craue_setting('share_shaarli') or craue_setting('share_diaspora') or craue_setting('share_unmark') or craue_setting('share_linkding') or craue_setting('share_mail') %}
+                <details class="article-rail__details">
+                    <summary class="article-rail__btn" title="{{ 'entry.view.left_menu.share_content'|trans }}">
+                        <i class="material-icons">share</i>
+                    </summary>
+                    <div class="article-rail__dropdown">
+                        {% if craue_setting('share_public') %}
+                            {% if is_granted('SHARE', entry) %}
+                                <form action="{{ path('share', {'id': entry.id}) }}" method="post">
+                                    <input type="hidden" name="token" value="{{ csrf_token('share-entry') }}"/>
+                                    <button type="submit" formtarget="_blank" title="{{ 'entry.view.left_menu.public_link'|trans }}">
+                                        <i class="material-icons small">visibility</i>
+                                        <span>{{ 'entry.view.left_menu.public_link'|trans }}</span>
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% if is_granted('UNSHARE', entry) %}
+                                <form action="{{ path('delete_share', {'id': entry.id}) }}" method="post">
+                                    <input type="hidden" name="token" value="{{ csrf_token('delete-share') }}"/>
+                                    <button type="submit" title="{{ 'entry.view.left_menu.delete_public_link'|trans }}">
+                                        <i class="material-icons small">visibility_off</i>
+                                        <span>{{ 'entry.view.left_menu.delete_public_link'|trans }}</span>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                        {% if craue_setting('share_twitter') %}
+                            <a href="https://twitter.com/share?text={{ entry.title|striptags|url_encode }}%20{{ entry.url|url_encode }}%20via%20@wallabagapp" target="_blank" rel="noopener" title="twitter">
+                                <i class="material-icons small">share</i>
+                                <span>twitter</span>
+                            </a>
+                        {% endif %}
+                        {% if craue_setting('share_shaarli') %}
+                            <a href="{{ craue_setting('shaarli_url') }}/index.php?post={{ entry.url|url_encode }}&amp;title={{ entry.title|striptags|url_encode }}&amp;tags={{ entry.tags|join(',')|striptags|url_encode }}{% if craue_setting('shaarli_share_origin_url') %}&amp;original_url={{ entry.originUrl|url_encode }}{% endif %}" target="_blank" rel="noopener" title="shaarli">
+                                <i class="material-icons small">share</i>
+                                <span>shaarli</span>
+                            </a>
+                        {% endif %}
+                        {% if craue_setting('share_diaspora') %}
+                            <a href="{{ craue_setting('diaspora_url') }}/bookmarklet?url={{ entry.url|url_encode }}&amp;title={{ entry.title|striptags|url_encode }}&amp;notes=&amp;v=1&amp;noui=1&amp;jump=doclose" target="_blank" rel="noopener" title="diaspora">
+                                <i class="material-icons small">share</i>
+                                <span>diaspora*</span>
+                            </a>
+                        {% endif %}
+                        {% if craue_setting('share_unmark') %}
+                            <a href="{{ craue_setting('unmark_url') }}/mark/add?url={{ entry.url|url_encode }}&amp;title={{ entry.title|striptags|url_encode }}&amp;v=6" target="_blank" rel="noopener" title="unmark">
+                                <i class="material-icons small">share</i>
+                                <span>unmark.it</span>
+                            </a>
+                        {% endif %}
+                        {% if craue_setting('share_linkding') %}
+                            <a href="{{ craue_setting('linkding_url') }}/bookmarks/new?url={{ entry.url|url_encode }}" target="_blank" rel="noopener" title="linkding">
+                                <i class="material-icons small">share</i>
+                                <span>linkding</span>
+                            </a>
+                        {% endif %}
+                        {% if craue_setting('share_mail') %}
+                            <a href="mailto:?subject={{ entry.title|striptags|url_encode }}&amp;body={{ entry.url|url_encode }}%20via%20@wallabagapp" title="{{ 'entry.view.left_menu.share_email_label'|trans }}">
+                                <i class="material-icons small">mail</i>
+                                <span>{{ 'entry.view.left_menu.share_email_label'|trans }}</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </details>
+            {% endif %}
+
+            {# Print #}
+            <a href="javascript: window.print()" class="article-rail__btn" title="{{ 'entry.view.left_menu.print'|trans }}">
+                <i class="material-icons">print</i>
+            </a>
+
+            {# Export #}
+            {% if is_granted('EXPORT', entry) %}
+                {% if craue_setting('export_epub') or craue_setting('export_pdf') or craue_setting('export_csv') or craue_setting('export_json') or craue_setting('export_txt') or craue_setting('export_xml') or craue_setting('export_md') %}
+                    <details class="article-rail__details">
+                        <summary class="article-rail__btn" title="{{ 'entry.view.left_menu.export'|trans }}">
+                            <i class="material-icons">file_download</i>
+                        </summary>
+                        <div class="article-rail__dropdown">
+                            {% if craue_setting('export_epub') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'epub'}) }}"><span>EPUB</span></a>{% endif %}
+                            {% if craue_setting('export_pdf') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'pdf'}) }}"><span>PDF</span></a>{% endif %}
+                            {% if craue_setting('export_csv') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'csv'}) }}"><span>CSV</span></a>{% endif %}
+                            {% if craue_setting('export_json') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'json'}) }}"><span>JSON</span></a>{% endif %}
+                            {% if craue_setting('export_txt') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'txt'}) }}"><span>TXT</span></a>{% endif %}
+                            {% if craue_setting('export_xml') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'xml'}) }}"><span>XML</span></a>{% endif %}
+                            {% if craue_setting('export_md') %}<a href="{{ path('export_entry', {'entry': entry.id, 'format': 'md'}) }}"><span>Markdown</span></a>{% endif %}
+                        </div>
+                    </details>
                 {% endif %}
-            </h1>
-        </header>
-        <aside class="entry-info">
-            <div class="tools entry-tools grey-text" dir="auto">
-                <ul class="stats">
+            {% endif %}
+
+            <div class="article-rail__section-end"></div>
+
+            {# Problem report #}
+            <a href="mailto:siteconfig@wallabag.org?subject=Wrong%20display%20in%20wallabag&amp;body={{ entry.url|url_encode }}" class="article-rail__btn" title="{{ 'entry.view.left_menu.problem.description'|trans }}">
+                <i class="material-icons">error</i>
+            </a>
+        </aside>
+
+        <div class="article-column">
+            <header class="article__header">
+                <h1{% if entry.language is defined and entry.language is not null %} lang="{{ entry.getHTMLLanguage() }}"{% endif %}>
+                    {{ entry.title|striptags|default('entry.default_title'|trans)|raw }}
+                </h1>
+                {% if is_granted('EDIT', entry) %}
+                    <a class="article__header__edit" href="{{ path('edit', {'id': entry.id}) }}" title="{{ 'entry.view.edit_title'|trans }}">
+                        <i class="material-icons">create</i>
+                    </a>
+                {% endif %}
+            </header>
+
+            <div class="article__meta">
+                <ul>
+                    <li>{% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}</li>
                     <li>
-                        {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
-                    </li>
-                    <li>
-                        <i class="material-icons grey-text" title="{{ 'entry.view.created_at'|trans }}">today</i>
+                        <i class="material-icons" title="{{ 'entry.view.created_at'|trans }}">today</i>
                         {{ entry.createdAt|date('Y-m-d H:i') }}
                     </li>
                     {% if entry.publishedAt is not null %}
-                    <li>
-                        <i class="material-icons grey-text" title="{{ 'entry.view.published_at'|trans }}">create</i>
-                        {{ entry.publishedAt|date('Y-m-d H:i') }}
-                    </li>
+                        <li>
+                            <i class="material-icons" title="{{ 'entry.view.published_at'|trans }}">create</i>
+                            {{ entry.publishedAt|date('Y-m-d H:i') }}
+                        </li>
                     {% endif %}
                     {% if entry.publishedBy is not empty %}
                         <li>
-                            <i class="material-icons grey-text" title="{{ 'entry.view.published_by'|trans }}">person</i>
+                            <i class="material-icons" title="{{ 'entry.view.published_by'|trans }}">person</i>
                             {% for author in entry.publishedBy %}
                                 {{ author|raw }}{% if not loop.last %}, {% endif %}
                             {% endfor %}
                         </li>
                     {% endif %}
-                    <li>
-                        <i class="material-icons grey-text">link</i>
-                        <a href="{{ entry.url|e }}" target="_blank" rel="noopener" title="{{ 'entry.view.original_article'|trans }} : {{ entry.title|striptags }}" class="tool grey-text">
+                    <li class="article__meta__domain">
+                        <i class="material-icons">link</i>
+                        <a href="{{ entry.url|e }}" target="_blank" rel="noopener noreferrer" title="{{ entry.title|striptags }}">
                             {{ entry.domainName|removeWww }}
                         </a>
                     </li>
                     {% if entry.annotations|length %}
                         <li>
-                            <i class="material-icons grey-text">comment</i>
+                            <i class="material-icons">comment</i>
                             {{ 'entry.view.annotations_on_the_entry'|trans({'%count%': entry.annotations|length}) }}
                         </li>
                     {% endif %}
                     {% if entry.originUrl is not empty %}
                         <li>
-                            <i class="material-icons grey-text" title="{{ 'entry.view.provided_by'|trans }}">launch</i>
-                            <a href="{{ entry.originUrl|e }}" target="_blank" rel="noopener" class="tool grey-text" data-tests="entry-origin-url">
+                            <i class="material-icons" title="{{ 'entry.view.provided_by'|trans }}">launch</i>
+                            <a href="{{ entry.originUrl|e }}" target="_blank" rel="noopener" data-tests="entry-origin-url">
                                 {{ entry.originUrl|striptags|removeSchemeAndWww|u.truncate(32) }}
                             </a>
                         </li>
                     {% endif %}
                 </ul>
-                {% include "Entry/_tags.html.twig" with {'tags': entry.tags, 'entryId': entry.id, 'withRemove': is_granted('UNTAG', entry)} only %}
             </div>
 
-            {% if is_granted('TAG', entry) %}
-                <div class="input-field hidden" data-controller="add-tag" data-action="leftbar:toggleAddTagForm@window->add-tag#toggle">
-                    {{ render(controller('Wallabag\\Controller\\TagController::addTagFormAction', {'id': entry.id})) }}
+            <div class="article__tags">
+                {% include "Entry/_tags.html.twig" with {'tags': entry.tags, 'entryId': entry.id, 'withRemove': is_granted('UNTAG', entry)} only %}
+                {% if is_granted('TAG', entry) %}
+                    <div class="input-field hidden" data-controller="add-tag" data-action="leftbar:toggleAddTagForm@window->add-tag#toggle">
+                        {{ render(controller('Wallabag\\Controller\\TagController::addTagFormAction', {'id': entry.id})) }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <article class="article__body"
+                {% if entry.language is defined and entry.language is not null %} lang="{{ entry.getHTMLLanguage() }}"{% endif %}
+                data-controller="mathjax highlight annotations"
+                data-annotations-entry-id-value="{{ entry.id }}"
+                data-annotations-create-url-value="{{ path('annotations_post_annotation', {'entry': entry.id}) }}"
+                data-annotations-update-url-value="{{ path('annotations_put_annotation', {'annotation': 'idAnnotation'}) }}"
+                data-annotations-destroy-url-value="{{ path('annotations_delete_annotation', {'annotation': 'idAnnotation'}) }}"
+                data-annotations-search-url-value="{{ path('annotations_get_annotations', {'entry': entry.id}) }}"
+            >
+                {{ entry.content|raw }}
+            </article>
+
+            <footer class="article__footer">
+                <a href="{{ entry.url|e }}" target="_blank" rel="noopener noreferrer" class="article__footer__original">
+                    {{ 'entry.view.left_menu.view_original_article'|trans }}
+                </a>
+                <div class="article__footer__actions">
+                    {% if is_granted('ARCHIVE', entry) %}
+                        <form action="{{ path('archive_entry', {'id': entry.id, redirect: current_path}) }}" method="post">
+                            <input type="hidden" name="token" value="{{ csrf_token('archive-entry') }}"/>
+                            <button type="submit" title="{{ (entry.isArchived == 0 ? 'entry.view.left_menu.set_as_read' : 'entry.view.left_menu.set_as_unread')|trans }}">
+                                <i class="material-icons">{% if entry.isArchived == 0 %}done{% else %}unarchive{% endif %}</i>
+                                {{ (entry.isArchived == 0 ? 'entry.view.left_menu.set_as_read' : 'entry.view.left_menu.set_as_unread')|trans }}
+                            </button>
+                        </form>
+                    {% endif %}
+                    {% if is_granted('STAR', entry) %}
+                        <form action="{{ path('star_entry', {'id': entry.id, redirect: current_path}) }}" method="post">
+                            <input type="hidden" name="token" value="{{ csrf_token('star-entry') }}"/>
+                            <button type="submit" title="{{ 'entry.view.left_menu.set_as_starred'|trans }}">
+                                <i class="material-icons">{% if entry.isStarred == 0 %}star_outline{% else %}star{% endif %}</i>
+                                {{ 'entry.view.left_menu.set_as_starred'|trans }}
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
-            {% endif %}
-
-        </aside>
-        <article
-            {% if entry.language is defined and entry.language is not null %} lang="{{ entry.getHTMLLanguage() }}"{% endif %}
-            data-controller="mathjax highlight annotations"
-            data-annotations-entry-id-value="{{ entry.id }}"
-            data-annotations-create-url-value="{{ path('annotations_post_annotation', {'entry': entry.id}) }}"
-            data-annotations-update-url-value="{{ path('annotations_put_annotation', {'annotation': 'idAnnotation'}) }}"
-            data-annotations-destroy-url-value="{{ path('annotations_delete_annotation', {'annotation': 'idAnnotation'}) }}"
-            data-annotations-search-url-value="{{ path('annotations_get_annotations', {'entry': entry.id}) }}"
-        >
-            {{ entry.content|raw }}
-        </article>
-
-        <div class="fixed-action-btn hide-on-large-only" data-controller="materialize--fab" data-action="scroll@window->materialize--fab#autoDisplay click->materialize--fab#click">
-            <a class="btn-floating btn-large" data-toggle="actions">
-              <i class="material-icons">menu</i>
-            </a>
-            <ul>
-                {% if is_granted('ARCHIVE', entry) %}
-                    <li>
-                      <form action="{{ path('archive_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
-                          <input type="hidden" name="token" value="{{ csrf_token('archive-entry') }}"/>
-
-                          <button type="submit" class="btn-floating">
-                              <i class="material-icons">{% if entry.isArchived == 0 %}done{% else %}unarchive{% endif %}</i>
-                          </button>
-                      </form>
-                    </li>
-                {% endif %}
-                {% if is_granted('STAR', entry) %}
-                    <li>
-                      <form action="{{ path('star_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
-                          <input type="hidden" name="token" value="{{ csrf_token('star-entry') }}"/>
-
-                          <button type="submit" class="btn-floating">
-                              <i class="material-icons">{% if entry.isStarred == 0 %}star_outline{% else %}star{% endif %}</i>
-                          </button>
-                      </form>
-                    </li>
-                {% endif %}
-                {% if is_granted('DELETE', entry) %}
-                    <li>
-                      <form action="{{ path('delete_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
-                          <input type="hidden" name="token" value="{{ csrf_token('delete-entry') }}"/>
-
-                          <button type="submit" class="btn-floating" onclick="return confirm('{{ 'entry.confirm.delete'|trans|escape('js') }}')">
-                              <i class="material-icons">delete</i>
-                          </button>
-                      </form>
-                    </li>
-                {% endif %}
-            </ul>
+            </footer>
         </div>
     </div>
 {% endblock %}
