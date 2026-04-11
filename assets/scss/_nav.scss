@@ -377,13 +377,15 @@ main {
     }
 
     > a {
-      display: flex;
+      display: flex !important;
       align-items: center;
       gap: 0.625rem;
-      padding: 0.5rem 0.875rem;
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-      color: variables.$color-text;
+      width: 100% !important;
+      box-sizing: border-box;
+      padding: 0.5rem 0.875rem !important;
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+      color: variables.$color-text !important;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -394,13 +396,17 @@ main {
       }
 
       > i.material-icons {
-        font-size: 1.125rem;
-        width: 1.125rem;
-        height: 1.125rem;
-        line-height: 1.125rem;
+        // Materialize's default is `float: left; margin-right: 24px; width: 24px`
+        // which kicks the icon out of the flex layout and leaves the anchor
+        // with nearly zero content width. Reset everything.
+        float: none !important;
+        font-size: 1.125rem !important;
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+        line-height: 1.125rem !important;
         color: variables.$color-text-muted;
         flex-shrink: 0;
-        margin: 0;
+        margin: 0 !important;
       }
     }
   }
