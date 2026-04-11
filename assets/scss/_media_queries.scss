@@ -20,12 +20,6 @@
   }
 }
 
-@media screen and (min-width: 993px) {
-  .entry main div#content {
-    padding-left: 70px;
-  }
-}
-
 @media only screen and (max-width: 992px) {
   header,
   main,
@@ -65,14 +59,6 @@
 
     > header > h1 {
       font-size: 1.33em;
-    }
-  }
-
-  .reader-mode {
-    width: 240px !important;
-
-    span {
-      opacity: 1;
     }
   }
 
