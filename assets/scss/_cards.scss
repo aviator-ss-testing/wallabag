@@ -33,6 +33,7 @@ main {
    ========================================================================== */
 
 .wbg-card {
+  position: relative;
   background: variables.$color-surface;
   border: 1px solid variables.$color-border;
   border-radius: variables.$radius;
@@ -42,6 +43,15 @@ main {
   &:hover {
     border-color: rgba(23, 169, 153, 0.5);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  // Neutralize Materialize z-depth classes applied by card JS
+  &.z-depth-1, &.z-depth-2, &.z-depth-3, &.z-depth-4, &.z-depth-5 {
+    box-shadow: none !important;
+  }
+
+  &:hover.z-depth-1, &:hover.z-depth-2, &:hover.z-depth-3, &:hover.z-depth-4 {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   }
 }
 
@@ -105,6 +115,31 @@ main {
   border: none;
   border-top: 1px solid variables.$color-border;
   margin: 0.75rem 0;
+}
+
+.wbg-card__kebab {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+
+  .dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
+    color: #7a7366;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 1);
+      color: #2a2620;
+    }
+  }
 }
 
 /* ==========================================================================
