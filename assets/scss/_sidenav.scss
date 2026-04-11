@@ -1,11 +1,13 @@
+@use "variables";
+
 /* ==========================================================================
    Sidenav
    ========================================================================== */
 
 .sidenav {
   width: 16rem;
-  background: $color-surface;
-  border-right: 1px solid $color-border;
+  background: variables.$color-surface;
+  border-right: 1px solid variables.$color-border;
 
   li {
     padding: 0;
@@ -43,17 +45,17 @@
   display: flex;
   align-items: center;
   padding: 0.625rem 0.75rem;
-  border-radius: $radius-sm;
+  border-radius: variables.$radius-sm;
   font-size: 0.875rem;
   height: auto;
   line-height: normal;
-  color: $color-text-muted;
+  color: variables.$color-text-muted;
   background: transparent;
   width: 100%;
   text-align: left;
 
   &:hover {
-    color: $color-text;
+    color: variables.$color-text;
     background: rgba(0, 0, 0, 0.04);
   }
 
@@ -70,7 +72,7 @@
 
 // Active state
 .sidenav li.active > a {
-  color: $color-accent;
+  color: variables.$color-accent;
   background: rgba(23, 169, 153, 0.1);
 }
 
@@ -88,7 +90,7 @@
 .sidenav-wordmark {
   font-size: 1rem;
   font-weight: 600;
-  color: $color-text;
+  color: variables.$color-text;
   margin-left: 0.5rem;
 }
 
@@ -96,7 +98,7 @@
   margin-top: auto;
   padding: 0.75rem;
   font-size: 0.75rem;
-  color: $color-text-muted;
+  color: variables.$color-text-muted;
 }
 
 .button-filters .sidenav-trigger,

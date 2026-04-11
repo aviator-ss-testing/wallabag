@@ -1,9 +1,11 @@
+@use "variables";
+
 /* ==========================================================================
    Nav
    ========================================================================== */
 
 .topbar {
-  background: $color-primary;
+  background: variables.$color-primary;
   height: 3.5rem;
   position: sticky;
   top: 0;
@@ -14,13 +16,13 @@
 
 .nav-panel-button li a,
 .nav-panel-button li button {
-  color: $color-primary-foreground;
+  color: variables.$color-primary-foreground;
   background: transparent;
-  border-radius: $radius-sm;
+  border-radius: variables.$radius-sm;
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: $color-primary-foreground;
+    color: variables.$color-primary-foreground;
   }
 }
 
