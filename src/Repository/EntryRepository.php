@@ -31,10 +31,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForAllByUser($userId)
+    public function getBuilderForAllByUser($userId, $direction = 'desc')
     {
         return $this
-            ->getSortedQueryBuilderByUser($userId)
+            ->getSortedQueryBuilderByUser($userId, 'createdAt', $direction)
         ;
     }
 
@@ -59,10 +59,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForUnreadByUser($userId)
+    public function getBuilderForUnreadByUser($userId, $direction = 'desc')
     {
         return $this
-            ->getSortedQueryBuilderByUser($userId)
+            ->getSortedQueryBuilderByUser($userId, 'createdAt', $direction)
             ->andWhere('e.isArchived = false')
         ;
     }
@@ -116,10 +116,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForArchiveByUser($userId)
+    public function getBuilderForArchiveByUser($userId, $direction = 'desc')
     {
         return $this
-            ->getSortedQueryBuilderByUser($userId, 'archivedAt', 'desc')
+            ->getSortedQueryBuilderByUser($userId, 'archivedAt', $direction)
             ->andWhere('e.isArchived = true')
         ;
     }
@@ -146,10 +146,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForStarredByUser($userId)
+    public function getBuilderForStarredByUser($userId, $direction = 'desc')
     {
         return $this
-            ->getSortedQueryBuilderByUser($userId, 'starredAt', 'desc')
+            ->getSortedQueryBuilderByUser($userId, 'starredAt', $direction)
             ->andWhere('e.isStarred = true')
         ;
     }
@@ -178,10 +178,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForSearchByUser($userId, $term, $currentRoute)
+    public function getBuilderForSearchByUser($userId, $term, $currentRoute, $direction = 'desc')
     {
         $qb = $this
-            ->getSortedQueryBuilderByUser($userId);
+            ->getSortedQueryBuilderByUser($userId, 'createdAt', $direction);
 
         if ('starred' === $currentRoute) {
             $qb->andWhere('e.isStarred = true');
@@ -209,9 +209,9 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForUntaggedByUser($userId)
+    public function getBuilderForUntaggedByUser($userId, $direction = 'desc')
     {
-        return $this->sortQueryBuilder($this->getRawBuilderForUntaggedByUser($userId));
+        return $this->sortQueryBuilder($this->getRawBuilderForUntaggedByUser($userId), 'createdAt', $direction);
     }
 
     /**
@@ -221,10 +221,10 @@ class EntryRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    public function getBuilderForAnnotationsByUser($userId)
+    public function getBuilderForAnnotationsByUser($userId, $direction = 'desc')
     {
         return $this
-            ->getSortedQueryBuilderByUser($userId)
+            ->getSortedQueryBuilderByUser($userId, 'createdAt', $direction)
             ->innerJoin('e.annotations', 'a')
         ;
     }
@@ -780,6 +780,10 @@ class EntryRepository extends ServiceEntityRepository
      */
     private function sortQueryBuilder(QueryBuilder $qb, $sortBy = 'createdAt', $direction = 'desc')
     {
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
         return $qb->orderBy(\sprintf('e.%s', $sortBy), $direction);
     }
 }
