@@ -8,7 +8,7 @@ body {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background: #fafafa;
+  background: variables.$color-bg;
 
   &.login main {
     padding: 0;
@@ -21,7 +21,7 @@ body {
 }
 
 a {
-  color: variables.$blue-accent-color;
+  color: variables.$color-accent;
 }
 
 main,
