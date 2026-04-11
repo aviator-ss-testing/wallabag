@@ -209,14 +209,27 @@
 .reader-mode {
   width: 70px !important;
   transition: width 0.2s ease;
+  overflow-x: hidden;
 
   .collapsible-body {
     height: 0;
     overflow: hidden;
   }
 
+  // When collapsed (not hovered), the narrow 70px width would make labels
+  // wrap to 2–3 lines inside each row, pushing item heights up even though
+  // the spans are invisible via opacity: 0. Force single-line at every
+  // level (the anchor/button itself AND the span inside), and clip
+  // horizontally so each row stays at its base 48px height.
+  a,
+  button {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
   span {
     opacity: 0;
+    white-space: nowrap;
     transition: opacity 0.2s ease;
   }
 
@@ -226,13 +239,13 @@
     span {
       opacity: 1;
     }
-  }
 
-  .collapsible-body {
-    height: auto;
+    .collapsible-body {
+      height: auto;
 
-    li a i.material-icons {
-      margin: auto 5px auto -8px;
+      li a i.material-icons {
+        margin: auto 5px auto -8px;
+      }
     }
   }
 }
