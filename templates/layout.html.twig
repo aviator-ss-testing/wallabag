@@ -143,8 +143,6 @@
         </div>
     </header>
 
-    {% block title '' %}
-
     <ul id="dropdown-account" class="dropdown-content">
         {% if is_granted('EDIT_CONFIG') %}
             <li><a href="{{ path('config') }}"><i class="material-icons">settings</i> {{ 'menu.left.config'|trans }}</a></li>
