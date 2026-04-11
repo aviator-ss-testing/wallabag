@@ -126,6 +126,7 @@
 
             <div class="wbg-view-toggle">
                 <form method="post" action="{{ path('switch_view_mode', {redirect: app.request.requesturi}) }}">
+                    <input type="hidden" name="token" value="{{ csrf_token('switch-view-mode') }}">
                     <button type="{% if app.user.config.listMode == 0 %}button{% else %}submit{% endif %}" name="mode" value="grid" class="wbg-view-btn{% if app.user.config.listMode == 0 %} active{% endif %}">
                         <i class="material-icons">view_module</i>
                     </button>

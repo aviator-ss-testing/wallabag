@@ -165,6 +165,14 @@ main {
   padding: 0.125rem;
   display: flex;
 
+  /* The form wraps both buttons — make it flex so buttons sit side-by-side
+     instead of stacking vertically (form is a block element by default). */
+  form {
+    display: flex;
+    gap: 0.125rem;
+    margin: 0;
+  }
+
   .wbg-view-btn {
     width: 2rem;
     height: 2rem;
