@@ -626,36 +626,40 @@ class EntryController extends AbstractController
         $searchTerm = (isset($request->query->all('search_entry')['term']) ? trim((string) $request->query->all('search_entry')['term']) : '');
         $currentRoute = $request->query->get('currentRoute') ?? '';
         $currentEntryId = $request->attributes->getInt('id');
+        $direction = strtolower($request->query->get('order', 'desc'));
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
 
         $formOptions = [];
 
         switch ($type) {
             case 'search':
-                $qb = $this->entryRepository->getBuilderForSearchByUser($this->getUser()->getId(), $searchTerm, $currentRoute);
+                $qb = $this->entryRepository->getBuilderForSearchByUser($this->getUser()->getId(), $searchTerm, $currentRoute, $direction);
                 break;
             case 'untagged':
-                $qb = $this->entryRepository->getBuilderForUntaggedByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForUntaggedByUser($this->getUser()->getId(), $direction);
                 break;
             case 'starred':
-                $qb = $this->entryRepository->getBuilderForStarredByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForStarredByUser($this->getUser()->getId(), $direction);
                 $formOptions['filter_starred'] = true;
                 break;
             case 'archive':
-                $qb = $this->entryRepository->getBuilderForArchiveByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForArchiveByUser($this->getUser()->getId(), $direction);
                 $formOptions['filter_archived'] = true;
                 break;
             case 'annotated':
-                $qb = $this->entryRepository->getBuilderForAnnotationsByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForAnnotationsByUser($this->getUser()->getId(), $direction);
                 break;
             case 'unread':
-                $qb = $this->entryRepository->getBuilderForUnreadByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForUnreadByUser($this->getUser()->getId(), $direction);
                 $formOptions['filter_unread'] = true;
                 break;
             case 'same-domain':
                 $qb = $this->entryRepository->getBuilderForSameDomainByUser($this->getUser()->getId(), $currentEntryId);
                 break;
             case 'all':
-                $qb = $this->entryRepository->getBuilderForAllByUser($this->getUser()->getId());
+                $qb = $this->entryRepository->getBuilderForAllByUser($this->getUser()->getId(), $direction);
                 break;
             default:
                 throw new \InvalidArgumentException(\sprintf('Type "%s" is not implemented.', $type));
@@ -690,6 +694,7 @@ class EntryController extends AbstractController
                 'currentPage' => $page,
                 'searchTerm' => $searchTerm,
                 'isFiltered' => $form->isSubmitted(),
+                'order' => $direction,
             ]
         );
     }
