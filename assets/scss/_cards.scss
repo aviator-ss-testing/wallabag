@@ -48,7 +48,16 @@ main {
 .wbg-card__image {
   position: relative;
   padding-top: 62.5%;
+  overflow: hidden;
   background: variables.$color-border;
+}
+
+.wbg-card__image-inner {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .wbg-card-placeholder {
