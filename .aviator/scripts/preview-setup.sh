@@ -82,6 +82,10 @@ t "Frontend build done"
 
 t "Warming Symfony cache..."
 php bin/console cache:clear --env=prod --no-debug 2>&1 | tail -3 || true
+# cache:clear ran as root and recreated the cache dirs root-owned. Hand them
+# back to www-data so php-fpm can write at request time.
+chown -R www-data:www-data /code/var
+chmod -R g+w /code/var
 t "Cache warmed"
 
 t "Starting php-fpm..."
