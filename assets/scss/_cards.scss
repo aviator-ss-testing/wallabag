@@ -111,6 +111,23 @@ main {
    New wbg-list-card (list view)
    ========================================================================== */
 
+/* Strip <ol> default styling so wbg-list-card rows are the only visible
+   boxes — no outer container border, no bullets, just a stack of cards. */
+.wbg-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wbg-list__item {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .wbg-list-card {
   display: flex;
   align-items: center;
@@ -138,6 +155,15 @@ main {
   background-size: cover;
   background-position: center;
   background-color: variables.$color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wbg-list-thumb__placeholder {
+  width: 60%;
+  height: 60%;
+  opacity: 0.5;
 }
 
 .wbg-list-body {
