@@ -50,7 +50,31 @@ main {
   }
 }
 
+// The entries_navigation_controller.js adds `z-depth-4` to the currently
+// focused <li> (not the inner .wbg-card), producing a heavy Materialize
+// shadow on the first card as soon as the page loads. Override it for any
+// z-depth class anywhere inside .entries and replace it with a subtle
+// accent outline instead, so keyboard navigation still has visual feedback.
+.entries,
+.wbg-list,
+.entries-row {
+  .z-depth-1,
+  .z-depth-2,
+  .z-depth-3,
+  .z-depth-4,
+  .z-depth-5 {
+    box-shadow: none !important;
+  }
+
+  .z-depth-4 > .wbg-list-card,
+  .z-depth-4 > .wbg-card {
+    outline: 2px solid variables.$color-accent;
+    outline-offset: 2px;
+  }
+}
+
 // Neutralize Materialize z-depth classes on both new and legacy card roots
+// (in case z-depth gets applied directly to the card div somewhere).
 .wbg-card,
 .entry-card {
   &.z-depth-1, &.z-depth-2, &.z-depth-3, &.z-depth-4, &.z-depth-5 {
