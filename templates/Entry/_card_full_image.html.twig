@@ -1,22 +1,74 @@
-<div class="card entry-card{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
-    <div class="card-body">
-        <div class="card-fullimage">
-            <ul class="card-entry-labels">
-            {% for tag in entry.tags|slice(0, 3) %}
-                <li title="{{ tag.label }}"><a href="{{ path('tag_entries', {'slug': tag.slug}) }}">{{ tag.label }}</a></li>
-            {% endfor %}
-            </ul>
-            {% if app.user.config.displayThumbnails %}
-                {% if is_granted('VIEW', entry) %}
-                    <a href="{{ path('view', {'id': entry.id}) }}">
-                        <span class="preview" style="background-image: url({{ entry.previewPicture }})"></span>
-                    </a>
-                {% else %}
-                    <span class="preview" style="background-image: url({{ entry.previewPicture }})"></span>
-                {% endif %}
+<div class="wbg-card{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
+    {% include "Entry/Card/_mass_checkbox.html.twig" with {'entry': entry} only %}
+
+    <div class="wbg-card__image">
+        {% if entry.previewPicture %}
+            {% if is_granted('VIEW', entry) %}
+                <a href="{{ path('view', {'id': entry.id}) }}" class="wbg-card__image-inner" style="background-image: url({{ entry.previewPicture }});"></a>
+            {% else %}
+                <span class="wbg-card__image-inner" style="background-image: url({{ entry.previewPicture }});"></span>
+            {% endif %}
+        {% else %}
+            {% if is_granted('VIEW', entry) %}
+                <a href="{{ path('view', {'id': entry.id}) }}" class="wbg-card__image-inner">
+                    <div class="wbg-card-placeholder">
+                        <img src="{{ asset('img/logo-square.svg') }}" alt="">
+                    </div>
+                </a>
+            {% else %}
+                <div class="wbg-card-placeholder">
+                    <img src="{{ asset('img/logo-square.svg') }}" alt="">
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="wbg-card__body">
+        {% include "Entry/Card/_content.html.twig" with {'entry': entry} only %}
+    </div>
+
+    <hr class="wbg-card__divider">
+
+    <div class="wbg-card__meta">
+        <div class="wbg-card__meta-left">
+            {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+            <span class="wbg-card__date">
+                <i class="material-icons" title="{{ 'entry.view.created_at'|trans }}">today</i>
+                {{ entry.createdAt|date('Y-m-d') }}
+            </span>
+        </div>
+        <div class="wbg-card__meta-right">
+            {% set current_path = app.request.requesturi %}
+            {% if is_granted('LIST_ENTRIES') %}
+                <a href="{{ path('same_domain', {'id': entry.id, redirect: current_path}) }}" class="wbg-card__action-btn" title="{{ 'entry.list.show_same_domain'|trans }}">
+                    <i class="material-icons">language</i>
+                </a>
+            {% endif %}
+            {% if is_granted('ARCHIVE', entry) %}
+                <form action="{{ path('archive_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
+                    <input type="hidden" name="token" value="{{ csrf_token('archive-entry') }}"/>
+                    <button type="submit" class="btn-link wbg-card__action-btn" title="{{ 'entry.list.toogle_as_read'|trans }}">
+                        <i class="material-icons">{% if entry.isArchived == 0 %}done{% else %}unarchive{% endif %}</i>
+                    </button>
+                </form>
+            {% endif %}
+            {% if is_granted('STAR', entry) %}
+                <form action="{{ path('star_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
+                    <input type="hidden" name="token" value="{{ csrf_token('star-entry') }}"/>
+                    <button type="submit" class="btn-link wbg-card__action-btn" title="{{ 'entry.list.toogle_as_star'|trans }}">
+                        <i class="material-icons">{% if entry.isStarred == 0 %}star_border{% else %}star{% endif %}</i>
+                    </button>
+                </form>
+            {% endif %}
+            {% if is_granted('DELETE', entry) %}
+                <form action="{{ path('delete_entry', {'id': entry.id, redirect: current_path}) }}" method="post" class="inline-block">
+                    <input type="hidden" name="token" value="{{ csrf_token('delete-entry') }}"/>
+                    <button type="submit" class="btn-link wbg-card__action-btn" title="{{ 'entry.list.delete'|trans }}" onclick="return confirm('{{ 'entry.confirm.delete'|trans|escape('js') }}')">
+                        <i class="material-icons">delete</i>
+                    </button>
+                </form>
             {% endif %}
         </div>
-        {% include "Entry/Card/_content.html.twig" with {'entry': entry} only %}
     </div>
 
     {% include "Entry/_card_actions.html.twig" with {'entry': entry} only %}
