@@ -1,0 +1,116 @@
+@use "variables";
+
+body.login {
+  background: variables.$color-bg;
+}
+
+.login-branding {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-logo-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: variables.$color-primary;
+  border-radius: variables.$radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.login-wordmark {
+  color: variables.$color-text;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.login-page {
+  min-height: 100vh;
+  background: variables.$color-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-form-container {
+  max-width: 400px;
+  width: 100%;
+  padding: 0 1.5rem;
+}
+
+.login-form-container input[type="text"],
+.login-form-container input[type="password"],
+.login-form-container input[type="email"] {
+  height: 2.75rem;
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius-sm;
+  font-size: 0.875rem;
+  padding: 0 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: variables.$color-accent;
+    box-shadow: 0 0 0 3px rgba(23, 169, 153, 0.15);
+    outline: none;
+  }
+}
+
+.login-password-wrapper {
+  position: relative;
+}
+
+.login-eye-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: variables.$color-text-muted;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    color: variables.$color-text;
+  }
+}
+
+.login-submit {
+  width: 100%;
+  height: 2.75rem;
+  background: variables.$color-accent;
+  color: variables.$color-primary-foreground;
+  border-radius: variables.$radius-sm;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: variables.$color-accent-hover;
+  }
+}
+
+.login-lang-switcher {
+  text-align: center;
+  color: variables.$color-text-muted;
+  font-size: 0.8rem;
+
+  .current-locale {
+    color: variables.$color-text;
+  }
+}
