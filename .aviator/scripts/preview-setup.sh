@@ -25,33 +25,48 @@ t "Redis ready"
 # Diff against the SHA the image was built from to detect what changed on
 # the branch. This lets us skip composer/yarn/build when nothing relevant
 # changed, cutting preview launch time for typical runs.
+#
+# Fallback: if /code/.preview-image-sha doesn't exist (image was built with
+# an older Dockerfile that didn't bake it in), diff against origin/master
+# instead. This still detects runbook changes correctly since runbooks branch
+# off master.
 IMAGE_SHA=""
 if [ -f /code/.preview-image-sha ]; then
   IMAGE_SHA=$(cat /code/.preview-image-sha)
+elif git -C /code rev-parse --verify origin/master >/dev/null 2>&1; then
+  IMAGE_SHA=$(git -C /code rev-parse origin/master)
+  t "  (no baked SHA — diffing against origin/master)"
 fi
 CHANGED_FILES=""
 if [ -n "$IMAGE_SHA" ]; then
   CHANGED_FILES=$(git -C /code diff --name-only "$IMAGE_SHA" HEAD 2>/dev/null || echo "")
 fi
+# If we still have no reference point, assume everything might have changed
+# and rebuild the frontend unconditionally (safe fallback).
+FORCE_REBUILD="false"
+if [ -z "$IMAGE_SHA" ]; then
+  FORCE_REBUILD="true"
+  t "  (no reference SHA — forcing full rebuild)"
+fi
 
 t "Checking for dependency changes..."
-if echo "$CHANGED_FILES" | grep -qE '^composer\.(json|lock)$'; then
-  t "  composer.lock changed — installing PHP dependencies"
+if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^composer\.(json|lock)$'; then
+  t "  installing PHP dependencies"
   composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 else
   t "  composer unchanged — skipping"
 fi
 
-if echo "$CHANGED_FILES" | grep -qE '^(package\.json|yarn\.lock)$'; then
-  t "  yarn.lock changed — installing Node dependencies"
+if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^(package\.json|yarn\.lock)$'; then
+  t "  installing Node dependencies"
   yarn install --frozen-lockfile
 else
   t "  yarn unchanged — skipping"
 fi
 
 t "Building frontend..."
-if echo "$CHANGED_FILES" | grep -qE '^(assets/|webpack\.config\.js|package\.json)'; then
-  t "  frontend sources changed — rebuilding"
+if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^(assets/|webpack\.config\.js|package\.json|templates/)'; then
+  t "  rebuilding frontend"
   yarn build:dev
 else
   t "  frontend unchanged — skipping"
