@@ -45,13 +45,16 @@ main {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
-  // Neutralize Materialize z-depth classes applied by card JS
-  &.z-depth-1, &.z-depth-2, &.z-depth-3, &.z-depth-4, &.z-depth-5 {
-    box-shadow: none !important;
-  }
-
   &:hover.z-depth-1, &:hover.z-depth-2, &:hover.z-depth-3, &:hover.z-depth-4 {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+// Neutralize Materialize z-depth classes on both new and legacy card roots
+.wbg-card,
+.entry-card {
+  &.z-depth-1, &.z-depth-2, &.z-depth-3, &.z-depth-4, &.z-depth-5 {
+    box-shadow: none !important;
   }
 }
 
@@ -122,6 +125,12 @@ main {
   top: 0.5rem;
   right: 0.5rem;
   z-index: 10;
+
+  // CSS fallback in case Stimulus/Materialize inline positioning is not overridden
+  .dropdown-content {
+    right: 0 !important;
+    left: auto !important;
+  }
 
   .dropdown-trigger {
     display: flex;
