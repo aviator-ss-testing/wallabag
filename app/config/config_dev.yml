@@ -13,7 +13,7 @@ framework:
         dsn: smtp://127.0.0.1:1025
 
 web_profiler:
-    toolbar: true
+    toolbar: false
     intercept_redirects: false
 
 monolog:

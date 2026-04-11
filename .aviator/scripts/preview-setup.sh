@@ -1,78 +1,59 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "Starting Postgres..."
-pg_ctlcluster 15 main start || service postgresql start
+LOG="/tmp/preview-timing.log"
+START=$(date +%s)
 
-echo "Starting Redis..."
-redis-server --daemonize yes
+t() {
+  local now
+  now=$(date +%s)
+  local elapsed=$((now - START))
+  echo "[${elapsed}s] $1" | tee -a "$LOG"
+}
 
-echo "Setting up Postgres user and database..."
-su - postgres -c "psql -c \"CREATE USER wallabag WITH PASSWORD 'wallapass';\"" 2>/dev/null || true
-su - postgres -c "psql -c \"CREATE DATABASE wallabag OWNER wallabag;\"" 2>/dev/null || true
+t "Starting wallabag preview setup"
 
-echo "Writing wallabag config..."
-cat > app/config/parameters.yml << PARAMS
-parameters:
-    database_driver: pdo_pgsql
-    database_host: 127.0.0.1
-    database_port: 5432
-    database_name: wallabag
-    database_user: wallabag
-    database_password: wallapass
-    database_path: null
-    database_table_prefix: wallabag_
-    database_socket: null
-    database_charset: utf8
-    domain_name: ${PREVIEW_URL:-https://localhost}
-    server_name: wallabag
-    mailer_dsn: null://null
-    locale: en
-    secret: preview-secret-change-me
-    twofactor_auth: false
-    twofactor_sender: no-reply@wallabag.org
-    fosuser_registration: true
-    fosuser_confirmation: false
-    fos_oauth_server_access_token_lifetime: 3600
-    fos_oauth_server_refresh_token_lifetime: 1209600
-    from_email: no-reply@wallabag.org
-    rss_limit: 50
-    rabbitmq_host: localhost
-    rabbitmq_port: 5672
-    rabbitmq_user: guest
-    rabbitmq_password: guest
-    rabbitmq_prefetch_count: 10
-    redis_scheme: tcp
-    redis_host: localhost
-    redis_port: 6379
-    redis_path: null
-    redis_password: null
-PARAMS
+# Ensure /code is writable by the current user (e2b runs the script as root
+# but the repo may have been cloned as a different user).
+chown -R user:user /code/ 2>/dev/null || true
 
-echo "Copying cached dependencies..."
-if [ -d /opt/wallabag-deps/vendor ]; then
-    cp -rn /opt/wallabag-deps/vendor ./vendor 2>/dev/null || true
-fi
-if [ -d /opt/wallabag-deps/node_modules ]; then
-    cp -rn /opt/wallabag-deps/node_modules ./node_modules 2>/dev/null || true
-fi
+# Set up the wallabag environment for prod so the Symfony debug toolbar is off.
+export APP_ENV=prod
+export APP_DEBUG=0
+export SYMFONY_ENV=prod
 
-echo "Running composer install (using cache)..."
-COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-progress
+# PREVIEW_URL is injected by Aviator's preview system with the sandbox's public
+# URL. Wallabag uses DOMAIN_NAME for generating asset URLs and redirects.
+export DOMAIN_NAME="${PREVIEW_URL:-http://127.0.0.1:8000}"
 
-echo "Running database migrations..."
-php bin/console doctrine:migrations:migrate --no-interaction --env=dev
+cd /code
 
-echo "Creating default admin user..."
-ADMIN_USER="${WALLABAG_ADMIN_USER:-admin}"
-ADMIN_EMAIL="${WALLABAG_ADMIN_EMAIL:-admin@wallabag.org}"
-ADMIN_PASS="${WALLABAG_ADMIN_PASSWORD:-preview}"
-php bin/console fos:user:create --super-admin "$ADMIN_USER" "$ADMIN_EMAIL" "$ADMIN_PASS" --env=dev 2>/dev/null || true
+t "Starting Redis..."
+redis-cli ping >/dev/null 2>&1 || redis-server --daemonize yes
+t "Redis ready"
 
-echo "Building frontend assets..."
+t "Installing any new PHP dependencies..."
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader 2>/dev/null || true
+t "Composer done"
+
+t "Installing any new Node dependencies..."
+yarn install --frozen-lockfile 2>/dev/null || true
+t "Yarn done"
+
+t "Building frontend..."
 yarn build:dev
+t "Frontend build done"
 
-echo "Starting wallabag dev server on port 443..."
-nohup php bin/console server:run 0.0.0.0:443 --env=dev > /tmp/wallabag-server.log 2>&1 &
+t "Warming Symfony cache..."
+php bin/console cache:clear --env=prod --no-debug 2>&1 | tail -3 || true
+t "Cache warmed"
 
-echo "Preview server started. Login with $ADMIN_USER / $ADMIN_PASS"
+t "Starting php-fpm..."
+setsid php-fpm --daemonize
+t "php-fpm started"
+
+t "Starting nginx..."
+setsid nginx
+t "Nginx started"
+
+t "Preview environment ready."
