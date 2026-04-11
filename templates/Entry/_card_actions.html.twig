@@ -1,6 +1,6 @@
 {% set current_path = app.request.requesturi %}
 <div class="wbg-card__kebab">
-    <button class="wbg-kebab-btn dropdown-trigger" data-target="kebab-{{ entry.id }}" data-controller="materialize--dropdown">
+    <button class="wbg-kebab-btn dropdown-trigger" data-target="kebab-{{ entry.id }}" data-controller="materialize--dropdown" data-materialize--dropdown-cover-trigger-value="false" data-materialize--dropdown-alignment-value="right">
         <i class="material-icons">more_vert</i>
     </button>
     <ul id="kebab-{{ entry.id }}" class="dropdown-content">

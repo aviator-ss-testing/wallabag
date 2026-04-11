@@ -1,5 +1,6 @@
 <div class="wbg-card{% if currentRoute in routes and entry.isArchived %} archived{% endif %}">
     {% include "Entry/Card/_mass_checkbox.html.twig" with {'entry': entry} only %}
+    {% include "Entry/_card_actions.html.twig" with {'entry': entry} only %}
 
     {% if app.user.config.displayThumbnails %}
     <div class="wbg-card__image">
@@ -73,5 +74,4 @@
         </div>
     </div>
 
-    {% include "Entry/_card_actions.html.twig" with {'entry': entry} only %}
 </div>
