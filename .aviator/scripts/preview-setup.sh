@@ -34,6 +34,24 @@ DEPS_CACHE="/opt/wallabag-deps"
 # without this. The seeded vendor came from a root build, so installs need it.
 export COMPOSER_ALLOW_SUPERUSER=1
 
+# Seed the prebuilt sqlite DB FIRST, before composer/yarn — composer's
+# post-install scripts boot the kernel, which opens the DB connection and (for
+# sqlite) creates an empty file if none exists. If that empty file beat the seed
+# step, the app 500s on missing tables. -s reseeds when the file is missing OR
+# empty, so a stray 0-byte file can't shadow the real seed.
+t "Setting up database..."
+mkdir -p /code/data/db
+if [ ! -s /code/data/db/wallabag.sqlite ]; then
+  if [ -f "$DEPS_CACHE/data/db/wallabag.sqlite" ]; then
+    t "  seeding wallabag.sqlite from $DEPS_CACHE"
+    cp "$DEPS_CACHE/data/db/wallabag.sqlite" /code/data/db/wallabag.sqlite
+  else
+    t "  no baked DB — running migrations"
+    php bin/console doctrine:migrations:migrate --no-interaction --env=dev || true
+  fi
+fi
+chmod 666 /code/data/db/wallabag.sqlite 2>/dev/null || true
+
 # Strategy: seed deps from the cache (a plain copy, fast and engine-check-free),
 # then *try* to reconcile to the repo's exact lockfile. The reconcile is
 # best-effort — if it fails (e.g. the image's toolchain doesn't match the
@@ -46,7 +64,7 @@ if [ ! -d /code/vendor ] && [ -d "$DEPS_CACHE/vendor" ]; then
 fi
 if [ ! -d /code/vendor ] || ! cmp -s /code/composer.lock "$DEPS_CACHE/composer.lock" 2>/dev/null; then
   t "  reconciling composer deps to repo lockfile"
-  composer install --no-interaction --prefer-dist --optimize-autoloader \
+  composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts \
     || t "  WARN: composer install failed — continuing with seeded vendor/"
 else
   t "  vendor/ matches cache"
@@ -70,21 +88,6 @@ fi
 t "Building frontend..."
 yarn build:dev || t "  WARN: yarn build:dev failed — serving prebuilt assets"
 t "Frontend build done"
-
-# Seed the prebuilt sqlite DB (baked into $DEPS_CACHE). Without it every
-# request 500s on missing tables (e.g. wallabag_internal_setting).
-t "Setting up database..."
-mkdir -p /code/data/db
-if [ ! -f /code/data/db/wallabag.sqlite ]; then
-  if [ -f "$DEPS_CACHE/data/db/wallabag.sqlite" ]; then
-    t "  seeding wallabag.sqlite from $DEPS_CACHE"
-    cp "$DEPS_CACHE/data/db/wallabag.sqlite" /code/data/db/wallabag.sqlite
-  else
-    t "  no baked DB — running migrations"
-    php bin/console doctrine:migrations:migrate --no-interaction --env=dev || true
-  fi
-fi
-chmod 666 /code/data/db/wallabag.sqlite 2>/dev/null || true
 
 # PREVIEW_URL is injected by Aviator's preview system with the sandbox's
 # public URL. Wallabag uses WALLABAG_BASE_URL for asset/link generation.
