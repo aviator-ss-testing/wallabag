@@ -1,51 +1,207 @@
-/* ==========================================================================
-   Nav
-   ========================================================================== */
-nav {
-  height: auto;
-  line-height: initial;
+@use "variables";
+
+/* Cancel inline margin-left injected by Materialize sidenav JS */
+main {
+  margin-left: 0 !important;
 }
 
-// adapted from anchor styles from node_modules/@materializecss/materialize/sass/components/_navbar.scss
-nav ul button {
-  transition: background-color .3s;
-  font-size: 1rem;
-  color: #fff;
-  display: block;
-  padding: 0 15px;
-  cursor: pointer;
-  background: none;
-  border: 0;
+/* ==========================================================================
+   New Topbar
+   ========================================================================== */
 
-  &:focus {
-    background: none;
+.wbg-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: variables.$color-surface;
+  border-bottom: 1px solid variables.$color-border;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.wbg-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wbg-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wbg-logo-box {
+  width: 2rem;
+  height: 2rem;
+  background: variables.$color-primary;
+  border-radius: variables.$radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 1.25rem;
+    height: 1.25rem;
   }
+}
+
+.wbg-wordmark {
+  color: variables.$color-text;
+  font-weight: 600;
+  font-size: 1rem;
+
+  @media (max-width: 639px) {
+    display: none;
+  }
+}
+
+.wbg-topbar-divider {
+  width: 1px;
+  height: 1.5rem;
+  background: variables.$color-border;
+  margin: 0 0.5rem;
+
+  @media (max-width: 639px) {
+    display: none;
+  }
+}
+
+.wbg-filter-btn {
+  background: transparent;
+  border: none;
+  color: variables.$color-text;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: variables.$radius-sm;
+  cursor: pointer;
 
   &:hover {
-    background-color: rgba(0 0 0 / 10%);
+    background: rgba(0, 0, 0, 0.04);
   }
 }
 
-nav {
-  input {
-    color: #aaa;
-  }
+.wbg-filter-menu {
+  li {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
-  ul button:hover,
-  ul a:hover {
-    background-color: initial;
+    .wbg-filter-count {
+      margin-left: auto;
+      color: variables.$color-text-muted;
+    }
+
+    &.active {
+      color: variables.$color-accent;
+      background: rgba(23, 169, 153, 0.08);
+
+      a {
+        color: variables.$color-accent;
+      }
+    }
   }
 }
 
-.nav-panel-item .sidenav-trigger {
-  margin-left: 0;
-  margin-right: 0.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  height: auto;
-  line-height: 1;
-  background-color: transparent;
+.wbg-topbar__right,
+.wbg-topbar__right.nav-panel-button {
+  padding: 0;
+  margin: 0;
+  gap: 0.25rem;
+}
+
+.wbg-topbar__right li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Apply button styles to direct children of wbg-topbar__right so icons
+   render as 2.25rem square tap targets. The right cluster contains a mix
+   of direct <a>/<button>/<form> elements and legacy <li> wrappers, so we
+   target both. */
+.wbg-topbar__right > a,
+.wbg-topbar__right > button,
+.wbg-topbar__right > form > button,
+.wbg-topbar__right li > a,
+.wbg-topbar__right li > button,
+.wbg-topbar__right li > form > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 0.375rem;
+  background: transparent;
   border: none;
+  color: variables.$color-text-muted;
+  cursor: pointer;
+}
+
+.wbg-topbar__right > a:hover,
+.wbg-topbar__right > button:hover,
+.wbg-topbar__right > form > button:hover,
+.wbg-topbar__right li > a:hover,
+.wbg-topbar__right li > button:hover,
+.wbg-topbar__right li > form > button:hover {
+  color: variables.$color-text;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.wbg-view-toggle {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: variables.$radius-sm;
+  padding: 0.125rem;
+  display: flex;
+
+  /* The form wraps both buttons — make it flex so buttons sit side-by-side
+     instead of stacking vertically (form is a block element by default). */
+  form {
+    display: flex;
+    gap: 0.125rem;
+    margin: 0;
+  }
+
+  .wbg-view-btn {
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: variables.$radius-sm;
+    cursor: pointer;
+    color: variables.$color-text-muted;
+
+    &.active {
+      background: rgba(23, 169, 153, 0.15);
+      color: variables.$color-accent;
+    }
+
+    &:not(.active):hover {
+      color: variables.$color-text;
+    }
+  }
+}
+
+/* ==========================================================================
+   Legacy nav panel styles (kept for search/add-url panels)
+   ========================================================================== */
+
+.nav-input {
+  display: none;
 }
 
 .nav-panel-item {
@@ -66,20 +222,10 @@ nav {
   line-height: 1;
 }
 
-.nav-input {
-  display: none;
-}
-
 .nav-panel-button {
   display: flex;
   flex-grow: 1;
   justify-content: flex-end;
-}
-
-.nav-panel-item .add,
-.nav-panel-item .search,
-.nav-panels .close {
-  color: #444 !important;
 }
 
 .nav-panels {
@@ -165,14 +311,18 @@ nav {
   margin: 0 1%;
 }
 
+.nav-panel-item .add,
+.nav-panel-item .search,
+.nav-panels .close {
+  color: #444 !important;
+}
+
 .entry-nav-top--sticky {
   position: sticky;
   top: 0;
 }
 
 .dropdown-content {
-  width: 100%;
-
   li {
     min-height: auto;
     padding-right: 15px;
@@ -186,6 +336,82 @@ nav {
   }
 }
 
+/* ==========================================================================
+   Account dropdown (top-right user menu)
+   ========================================================================== */
+
+#dropdown-account {
+  // Materialize positions the dropdown absolutely — give it a consistent
+  // width, modern surface, and clean typography.
+  width: 240px !important;
+  min-width: 240px;
+  max-height: none !important;
+  padding: 0.25rem 0;
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius-sm;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  list-style: none;
+
+  li {
+    padding: 0;
+    min-height: 0;
+    list-style: none;
+    background: transparent;
+
+    &:hover,
+    &.active,
+    &.selected {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    &.divider {
+      height: 1px;
+      margin: 0.25rem 0;
+      padding: 0;
+      background: variables.$color-border;
+
+      &:hover {
+        background: variables.$color-border;
+      }
+    }
+
+    > a {
+      display: flex !important;
+      align-items: center;
+      gap: 0.625rem;
+      width: 100% !important;
+      box-sizing: border-box;
+      padding: 0.5rem 0.875rem !important;
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+      color: variables.$color-text !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      &:hover {
+        color: variables.$color-text;
+        background: transparent;
+      }
+
+      > i.material-icons {
+        // Materialize's default is `float: left; margin-right: 24px; width: 24px`
+        // which kicks the icon out of the flex layout and leaves the anchor
+        // with nearly zero content width. Reset everything.
+        float: none !important;
+        font-size: 1.125rem !important;
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+        line-height: 1.125rem !important;
+        color: variables.$color-text-muted;
+        flex-shrink: 0;
+        margin: 0 !important;
+      }
+    }
+  }
+}
+
 @media (min-width: 993px) {
   .toggle-add-url-container {
     flex-grow: 1;
@@ -195,10 +421,6 @@ nav {
     display: flex;
     width: 100%;
     justify-content: end;
-  }
-
-  .sidenav-trigger {
-    display: none;
   }
 
   .dropdown-content {

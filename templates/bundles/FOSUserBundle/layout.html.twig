@@ -8,34 +8,19 @@
 {% block messages %}{% endblock %}
 
 {% block content %}
-<main class="valign-wrapper">
-    <div class="row">
-        <div class="card sw">
-            <div class="center"><img src="{{ asset('img/logo-wallabag.svg') }}" class="typo-logo" alt="wallabag logo" /></div>
-            {% block fos_user_content %}
-            {% endblock fos_user_content %}
+<div class="login-page" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative;">
+    <div class="login-branding">
+        <div class="login-logo-box">
+            <img src="{{ asset('img/logo-square.svg') }}" alt="wallabag logo" />
         </div>
-        <div class="center">
-            <form action="{{ path('changeLocale', {'language': 'de'}) }}" method="post" class="inline-block">
-                <input type="hidden" name="token" value="{{ csrf_token('change-locale') }}"/>
-
-                <button type="submit" class="btn-link">Deutsch</button>
-            </form>
-            –
-            <form action="{{ path('changeLocale', {'language': 'en'}) }}" method="post" class="inline-block">
-                <input type="hidden" name="token" value="{{ csrf_token('change-locale') }}"/>
-
-                <button type="submit" class="btn-link">English</button>
-            </form>
-            –
-            <form action="{{ path('changeLocale', {'language': 'fr'}) }}" method="post" class="inline-block">
-                <input type="hidden" name="token" value="{{ csrf_token('change-locale') }}"/>
-
-                <button type="submit" class="btn-link">Français</button>
-            </form>
-        </div>
+        <span class="login-wordmark">wallabag</span>
     </div>
-</main>
+
+    <div class="login-form-container">
+        {% block fos_user_content %}
+        {% endblock fos_user_content %}
+    </div>
+</div>
 {% endblock %}
 
 {% block footer %}

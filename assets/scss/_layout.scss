@@ -8,7 +8,7 @@ body {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background: #fafafa;
+  background: variables.$color-bg;
 
   &.login main {
     padding: 0;
@@ -21,10 +21,14 @@ body {
 }
 
 a {
-  color: variables.$blue-accent-color;
+  color: variables.$color-accent;
 }
 
-main,
+main {
+  height: 100%;
+  margin-left: 0 !important;
+}
+
 #content,
 .valign-wrapper {
   height: 100%;
@@ -36,6 +40,7 @@ main,
 
 #main {
   flex: 1 0 auto;
+  margin-left: 0 !important;
 
   .logo {
     a {

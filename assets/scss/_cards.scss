@@ -28,6 +28,254 @@ main {
   }
 }
 
+/* ==========================================================================
+   New wbg-card (grid view)
+   ========================================================================== */
+
+.wbg-card {
+  position: relative;
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(23, 169, 153, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &:hover.z-depth-1, &:hover.z-depth-2, &:hover.z-depth-3, &:hover.z-depth-4 {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+// The entries_navigation_controller.js adds `z-depth-4` to the currently
+// focused <li> (not the inner .wbg-card), producing a heavy Materialize
+// shadow on the first card as soon as the page loads. Override it for any
+// z-depth class anywhere inside .entries and replace it with a subtle
+// accent outline instead, so keyboard navigation still has visual feedback.
+.entries,
+.wbg-list,
+.entries-row {
+  .z-depth-1,
+  .z-depth-2,
+  .z-depth-3,
+  .z-depth-4,
+  .z-depth-5 {
+    box-shadow: none !important;
+  }
+
+  .z-depth-4 > .wbg-list-card,
+  .z-depth-4 > .wbg-card {
+    outline: 2px solid variables.$color-accent;
+    outline-offset: 2px;
+  }
+}
+
+// Neutralize Materialize z-depth classes on both new and legacy card roots
+// (in case z-depth gets applied directly to the card div somewhere).
+.wbg-card,
+.entry-card {
+  &.z-depth-1, &.z-depth-2, &.z-depth-3, &.z-depth-4, &.z-depth-5 {
+    box-shadow: none !important;
+  }
+}
+
+.wbg-card__image {
+  position: relative;
+  padding-top: 62.5%;
+  overflow: hidden;
+  background: variables.$color-border;
+}
+
+.wbg-card__image-inner {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.wbg-card-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+
+  img {
+    width: 4rem;
+    opacity: 0.15;
+  }
+}
+
+.wbg-card__body {
+  padding: 0.875rem 1rem 0.75rem;
+}
+
+.wbg-card__domain {
+  font-size: 0.8125rem;
+  color: variables.$color-text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.25rem;
+
+  a {
+    color: inherit;
+
+    &:hover {
+      color: variables.$color-text;
+    }
+  }
+}
+
+.wbg-card__title {
+  color: variables.$color-accent;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.4;
+  // Reserve exactly 2 lines of height so all cards are uniform regardless
+  // of title length. Single-line titles still occupy 2 lines of space;
+  // titles longer than 2 lines get clamped with an ellipsis.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8rem; // 1rem × 1.4 line-height × 2 lines
+  text-decoration: none;
+  word-break: break-word;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wbg-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+}
+
+.wbg-card__divider {
+  border: none;
+  border-top: 1px solid variables.$color-border;
+  margin: 0.75rem 0;
+}
+
+.wbg-card__kebab {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+
+  // CSS fallback in case Stimulus/Materialize inline positioning is not overridden
+  .dropdown-content {
+    right: 0 !important;
+    left: auto !important;
+  }
+
+  .dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
+    color: #7a7366;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 1);
+      color: #2a2620;
+    }
+  }
+}
+
+/* ==========================================================================
+   New wbg-list-card (list view)
+   ========================================================================== */
+
+/* Strip <ol> default styling so wbg-list-card rows are the only visible
+   boxes — no outer container border, no bullets, just a stack of cards. */
+.wbg-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wbg-list__item {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wbg-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: variables.$color-surface;
+  border: 1px solid variables.$color-border;
+  border-radius: variables.$radius-sm;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: rgba(23, 169, 153, 0.5);
+  }
+
+  &.archived {
+    opacity: 0.5;
+  }
+}
+
+.wbg-list-thumb {
+  width: 3rem;
+  height: 3rem;
+  border-radius: variables.$radius-sm;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: variables.$color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wbg-list-thumb__placeholder {
+  width: 60%;
+  height: 60%;
+  opacity: 0.5;
+}
+
+.wbg-list-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.25rem;
+}
+
+.wbg-list-meta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+}
+
+/* ==========================================================================
+   Legacy Materialize-based card classes (preserved for other templates)
+   ========================================================================== */
+
 .card {
   .card-content {
     padding-bottom: 12px;
@@ -313,7 +561,6 @@ a.original:not(.waves-effect) {
   height: 100%;
   flex-direction: column;
 }
-
 
 .tools {
   display: flex;
