@@ -7,103 +7,86 @@ START=$(date +%s)
 t() {
   local now
   now=$(date +%s)
-  local elapsed=$((now - START))
-  echo "[${elapsed}s] $1" | tee -a "$LOG"
+  echo "[$((now - START))s] $1" | tee -a "$LOG"
 }
 
 t "Starting wallabag preview setup"
 
-# e2b runs the script as root. Make sure /code is accessible to git operations.
+# e2b runs the script as root. Make git operations trust /code.
 git config --global --add safe.directory /code
-
 cd /code
 
 t "Starting Redis..."
 redis-cli ping >/dev/null 2>&1 || redis-server --daemonize yes
 t "Redis ready"
 
-# The template image pre-installs deps and a seed DB into $DEPS_CACHE. That
-# dir lives outside /code, so it survives the fresh `git clone` the preview
-# system does into /code on every launch. We seed the freshly-cloned workspace
-# from it here — copying is far faster than a cold composer/yarn install — and
-# only fall back to a real install when the cache is absent or the branch
-# changed the lockfiles.
-DEPS_CACHE="/opt/wallabag-deps"
-
-# e2b runs this script as root; composer refuses to run plugins as root
-# without this. The seeded vendor came from a root build, so installs need it.
+# composer refuses to run plugins as root without this.
 export COMPOSER_ALLOW_SUPERUSER=1
 
-# Seed the prebuilt sqlite DB FIRST, before composer/yarn — composer's
-# post-install scripts boot the kernel, which opens the DB connection and (for
-# sqlite) creates an empty file if none exists. If that empty file beat the seed
-# step, the app 500s on missing tables. -s reseeds when the file is missing OR
-# empty, so a stray 0-byte file can't shadow the real seed.
-t "Setting up database..."
-mkdir -p /code/data/db
-if [ ! -s /code/data/db/wallabag.sqlite ]; then
-  if [ -f "$DEPS_CACHE/data/db/wallabag.sqlite" ]; then
-    t "  seeding wallabag.sqlite from $DEPS_CACHE"
-    cp "$DEPS_CACHE/data/db/wallabag.sqlite" /code/data/db/wallabag.sqlite
-  else
-    t "  no baked DB — running migrations"
-    php bin/console doctrine:migrations:migrate --no-interaction --env=dev || true
-  fi
-fi
-chmod 666 /code/data/db/wallabag.sqlite 2>/dev/null || true
-
-# Strategy: seed deps from the cache (a plain copy, fast and engine-check-free),
-# then *try* to reconcile to the repo's exact lockfile. The reconcile is
-# best-effort — if it fails (e.g. the image's toolchain doesn't match the
-# repo's engine requirements) we keep the seeded deps so the preview still
-# boots rather than dying on a `set -e`.
-t "Setting up PHP dependencies..."
-if [ ! -d /code/vendor ] && [ -d "$DEPS_CACHE/vendor" ]; then
-  t "  seeding vendor/ from $DEPS_CACHE"
-  cp -a "$DEPS_CACHE/vendor" /code/vendor
-fi
-if [ ! -d /code/vendor ] || ! cmp -s /code/composer.lock "$DEPS_CACHE/composer.lock" 2>/dev/null; then
-  t "  reconciling composer deps to repo lockfile"
-  composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts \
-    || t "  WARN: composer install failed — continuing with seeded vendor/"
+# The template image baked the installed deps, the built frontend, and a seed DB
+# into /code. The preview launch uses a git fetch fast-path and cleans the tree
+# with `git clean -fd` (respects .gitignore), so those gitignored artifacts
+# (vendor/, node_modules/, web/build/*, data/db/wallabag.sqlite) survive. We only
+# redo a heavy step when the runbook branch actually changed the relevant files
+# vs the commit the image was built from — recorded at /preview-image-sha
+# (outside /code, where the launch clean can't delete it).
+BASE_SHA=""
+[ -f /preview-image-sha ] && BASE_SHA=$(cat /preview-image-sha)
+if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA" 2>/dev/null; then
+  CHANGED=$(git diff --name-only "$BASE_SHA" HEAD 2>/dev/null || echo "__ALL__")
 else
-  t "  vendor/ matches cache"
+  CHANGED="__ALL__"
+  t "  (no usable baked SHA — running full setup)"
+fi
+# changed <regex> -> true if the baked->HEAD diff touched a matching path
+# (or if we have no reference and must assume everything changed).
+changed() { [ "$CHANGED" = "__ALL__" ] || echo "$CHANGED" | grep -qE "$1"; }
+
+# Database: the baked seed survives the launch; only act if it's missing/empty.
+mkdir -p data/db
+if [ ! -s data/db/wallabag.sqlite ]; then
+  t "  DB missing/empty — running migrations"
+  php bin/console doctrine:migrations:migrate --no-interaction --env=dev || true
+fi
+chmod 666 data/db/wallabag.sqlite 2>/dev/null || true
+
+# PHP deps: reinstall only if vendor is gone or the branch changed composer files.
+if [ ! -d vendor ] || changed '^composer\.(json|lock)$'; then
+  t "  composer install"
+  composer install --no-interaction --prefer-dist --no-scripts \
+    || t "  WARN: composer install failed — using baked vendor/"
+else
+  t "  composer unchanged — skip"
 fi
 
-t "Setting up Node dependencies..."
-if [ ! -d /code/node_modules ] && [ -d "$DEPS_CACHE/node_modules" ]; then
-  t "  seeding node_modules/ from $DEPS_CACHE"
-  cp -a "$DEPS_CACHE/node_modules" /code/node_modules
-fi
-if [ ! -d /code/node_modules ] || ! cmp -s /code/yarn.lock "$DEPS_CACHE/yarn.lock" 2>/dev/null; then
-  t "  reconciling node deps to repo lockfile"
+# Node deps: reinstall only if node_modules is gone or the branch changed them.
+if [ ! -d node_modules ] || changed '^(package\.json|yarn\.lock)$'; then
+  t "  yarn install"
   yarn install --frozen-lockfile \
-    || t "  WARN: yarn install failed — continuing with seeded node_modules/"
+    || t "  WARN: yarn install failed — using baked node_modules/"
 else
-  t "  node_modules/ matches cache"
+  t "  node_modules unchanged — skip"
 fi
 
-# Rebuild the frontend so the branch's asset/template changes are reflected.
-# Best-effort for the same reason as above.
-t "Building frontend..."
-yarn build:dev || t "  WARN: yarn build:dev failed — serving prebuilt assets"
-t "Frontend build done"
+# Frontend: rebuild only if the build output is gone or assets/templates changed.
+if [ ! -d web/build ] || changed '^(assets/|webpack\.config\.js|package\.json|templates/)'; then
+  t "  yarn build:dev"
+  yarn build:dev || t "  WARN: yarn build:dev failed — using baked web/build/"
+else
+  t "  frontend unchanged — skip"
+fi
 
-# PREVIEW_URL is injected by Aviator's preview system with the sandbox's
-# public URL. Wallabag uses WALLABAG_BASE_URL for asset/link generation.
+# PREVIEW_URL is injected by Aviator's preview system with the sandbox's public
+# URL. Wallabag uses WALLABAG_BASE_URL for asset/link generation.
 export WALLABAG_BASE_URL="${PREVIEW_URL:-http://127.0.0.1:8000}"
 
 t "Starting wallabag web server on port 8000..."
-# Same approach as local development: Symfony's built-in web server in dev
-# mode. The Symfony Web Debug Toolbar is disabled via app/config/config_dev.yml
-# (web_profiler.toolbar: false) so the UI is clean.
 mkdir -p /var/log/app
 setsid php bin/console server:run 0.0.0.0:8000 --env=dev \
   < /dev/null > /var/log/app/wallabag.log 2>&1 &
 disown
 
-# Don't report "ready" until the port actually accepts connections — the old
-# script logged success unconditionally, masking a server that died on boot.
+# Don't report ready until the port actually accepts connections.
 t "Waiting for server on port 8000..."
 for i in $(seq 1 20); do
   if curl -sf -o /dev/null http://127.0.0.1:8000/; then

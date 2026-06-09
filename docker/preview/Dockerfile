@@ -1,16 +1,15 @@
-# Wallabag preview dependency-cache image for e2b sandboxes.
+# Wallabag preview image for e2b sandboxes.
 #
-# This image is a DEPENDENCY CACHE, not the running app. Aviator's preview
-# system git-clones the repo fresh into /code on every launch, which wipes
-# anything baked into /code. So we stage installed deps + a seed DB under
-# /opt/wallabag-deps (outside /code, so it survives the clone), and
-# .aviator/scripts/preview-setup.sh copies them into the freshly-cloned
-# workspace at runtime.
+# Bakes the repo + installed deps + built frontend + a seed DB directly into
+# /code. The Aviator preview launch finds an existing matching repo in /code and
+# takes a git FETCH fast-path (not a fresh clone); its working-tree cleanup is
+# `git reset --hard` + `git clean -fd` (no -x), which RESPECTS .gitignore. Since
+# vendor/, node_modules/, web/build/*, and data/db/wallabag*.sqlite are all
+# gitignored, the baked artifacts survive the launch untouched — a preview starts
+# with everything already in place, so no copy/symlink/install is needed.
 #
 # Build via the e2b CLI:  bash docker/preview/build.sh e2b   (config: e2b.toml)
-#
-# Node 24 satisfies both the runbook branches (engines >=20) and upstream
-# master (>=24), so a preview works regardless of which the sandbox checks out.
+# Node 24 covers both the runbook branches (engines >=20) and master (>=24).
 
 FROM php:8.2-bookworm
 
@@ -45,36 +44,33 @@ RUN printf "no\nno\nno\n" | pecl install redis-6.1.0 \
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Coding-agent tooling (claude CLI installs to /root/.local/bin — symlink it
-# onto PATH so the agent can find it).
+# Coding-agent tooling (claude installs to /root/.local/bin — symlink onto PATH).
 RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62 \
     && ln -sf /root/.local/bin/claude /usr/local/bin/claude \
     && git lfs install
 
-# --- Dependency cache (survives the runtime clone into /code) ----------------
-ENV DEPS_CACHE=/opt/wallabag-deps
-WORKDIR ${DEPS_CACHE}
+# --- Bake repo + deps + frontend build + seed DB into /code -----------------
+# Clone the actual (public) preview repo so /code's origin matches at runtime
+# and the launch fetch fast-path triggers. --depth 1 keeps .git small.
+RUN git clone --depth 1 --branch master \
+        https://github.com/aviator-ss-testing/wallabag.git /code
+WORKDIR /code
 
-# PHP deps. Copy only the manifests + app/ so this heavy layer caches unless
-# they change. composer's classmap scans app/AppKernel.php and app/AppCache.php;
-# PSR-4 src/ is registered, not scanned, so it needn't be present at build (the
-# runtime resolves it relative to /code). --no-scripts skips wallabag's
-# post-install hooks (they need runtime config); the autoloader is still
-# generated, so vendor/autoload_runtime.php exists. NOT --optimize, same reason.
-# Composer runs anonymously against GitHub (the repo's .composer-auth.json token
-# is stale and makes auth *fail*; public packages download fine without it).
-COPY composer.json composer.lock ./
-COPY app ./app
+# PHP deps. --no-scripts skips wallabag's post-install hooks (they need runtime
+# config); the autoloader (incl. vendor/autoload_runtime.php) is still generated.
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
         --no-interaction --no-progress --no-scripts --prefer-dist
 
-# Node deps (manifests only — wallabag has no source-dependent postinstall).
-COPY package.json yarn.lock ./
+# Node deps + frontend build. Output lands in web/build/, which is gitignored
+# (/web/build/* in .gitignore) and therefore survives the launch clean.
 RUN yarn install --frozen-lockfile
+RUN yarn build:dev
 
-# Seed sqlite DB so previews have schema + content immediately. Placed under
-# the cache (not /code) so it survives the runtime clone; the setup script
-# seeds /code/data/db/wallabag.sqlite from it.
-RUN mkdir -p data/db
+# Seed sqlite DB (gitignored -> survives). The build context supplies the file.
 COPY docker/preview/seed.sqlite data/db/wallabag.sqlite
 RUN chmod 666 data/db/wallabag.sqlite
+
+# Record the baked commit OUTSIDE /code — a file inside /code would be deleted by
+# the launch `git clean -fd`. preview-setup.sh diffs the runbook branch against
+# this to decide whether anything actually needs reinstalling/rebuilding.
+RUN git -C /code rev-parse HEAD > /preview-image-sha
