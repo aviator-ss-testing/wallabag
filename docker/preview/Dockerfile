@@ -55,26 +55,26 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62 \
 ENV DEPS_CACHE=/opt/wallabag-deps
 WORKDIR ${DEPS_CACHE}
 
-# Copy the full source (minus vendor/node_modules, which Dockerfile.dockerignore
-# excludes). composer's autoload generation scans classmap entries like
-# app/AppKernel.php, so the source must be present — a manifests-only copy fails.
-COPY . ${DEPS_CACHE}/
-
-# PHP deps. --no-scripts skips wallabag's post-install hooks (they need runtime
-# app config); the autoloader is still generated, so vendor/autoload_runtime.php
-# exists. NOT --optimize: a build-time optimized classmap would bake absolute
-# paths; the runtime resolves classes relative to /code instead. Composer runs
-# anonymously against GitHub (the repo's .composer-auth.json token is stale and
-# makes auth *fail*; public packages download fine without it).
+# PHP deps. Copy only the manifests + app/ so this heavy layer caches unless
+# they change. composer's classmap scans app/AppKernel.php and app/AppCache.php;
+# PSR-4 src/ is registered, not scanned, so it needn't be present at build (the
+# runtime resolves it relative to /code). --no-scripts skips wallabag's
+# post-install hooks (they need runtime config); the autoloader is still
+# generated, so vendor/autoload_runtime.php exists. NOT --optimize, same reason.
+# Composer runs anonymously against GitHub (the repo's .composer-auth.json token
+# is stale and makes auth *fail*; public packages download fine without it).
+COPY composer.json composer.lock ./
+COPY app ./app
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
         --no-interaction --no-progress --no-scripts --prefer-dist
 
-# Node deps.
+# Node deps (manifests only — wallabag has no source-dependent postinstall).
+COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 # Seed sqlite DB so previews have schema + content immediately. Placed under
 # the cache (not /code) so it survives the runtime clone; the setup script
 # seeds /code/data/db/wallabag.sqlite from it.
-RUN mkdir -p data/db \
-    && cp docker/preview/seed.sqlite data/db/wallabag.sqlite \
-    && chmod 666 data/db/wallabag.sqlite
+RUN mkdir -p data/db
+COPY docker/preview/seed.sqlite data/db/wallabag.sqlite
+RUN chmod 666 data/db/wallabag.sqlite

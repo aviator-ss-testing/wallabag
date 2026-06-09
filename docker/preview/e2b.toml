@@ -1,18 +1,15 @@
-# This is a config for E2B sandbox template.
-# You can use template ID (spl96v4ahrwfpd4y5idi) or template name (aviator-staging-account-1-id-3) to create a sandbox:
-
-# Python SDK
-# from e2b import Sandbox, AsyncSandbox
-# sandbox = Sandbox.create("aviator-staging-account-1-id-3") # Sync sandbox
-# sandbox = await AsyncSandbox.create("aviator-staging-account-1-id-3") # Async sandbox
-
-# JS SDK
-# import { Sandbox } from 'e2b'
-# const sandbox = await Sandbox.create('aviator-staging-account-1-id-3')
+# E2B sandbox template config for the wallabag preview image.
+#
+# This rebuilds the EXISTING template in place (template_id below), so the
+# mergeit preview config (image: walladev-preinstall-deps -> account-1-id-6)
+# keeps resolving to it with no repoint. team_id is the aviator-prod team
+# (matches extras/e2b_templates/e2b.prod.toml in mergeit).
+#
+# Build:  bash docker/preview/build.sh e2b
 
 team_id = "b7021a8c-0dc0-4514-acb1-377d3dd1d8e3"
 memory_mb = 4_096
-cpu_count = 2
+cpu_count = 4
 dockerfile = "docker/preview/Dockerfile"
-template_name = "aviator-staging-account-1-id-3"
-template_id = "spl96v4ahrwfpd4y5idi"
+template_name = "account-1-id-6"
+template_id = "re9xmn9s1vl40oqxl2ds"

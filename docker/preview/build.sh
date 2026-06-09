@@ -24,7 +24,7 @@ case "$MODE" in
       --config docker/preview/e2b.toml \
       --path . \
       --memory-mb 4096 \
-      --cpu-count 2
+      --cpu-count 4
     ;;
   *)
     echo "Usage: $0 {local|e2b}" >&2

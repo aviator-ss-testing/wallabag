@@ -1,0 +1,14 @@
+# Keep the build context (and the e2b template upload) small. The preview image
+# installs deps fresh inside the build, so host copies of these are unwanted —
+# a host-arch node_modules/vendor would also poison the linux image.
+.git
+node_modules
+vendor
+var/cache
+var/logs
+data/db/wallabag.sqlite
+data/assets
+web/build
+web/assets
+.env.local
+.env.test.local
