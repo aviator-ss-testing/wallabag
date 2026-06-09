@@ -22,5 +22,6 @@
 
     <div class="wbg-list-meta">
         {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+        <span><span class="material-icons">today</span> {{ entry.createdAt|date('Y-m-d') }}</span>
     </div>
 </div>
