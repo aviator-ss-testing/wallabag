@@ -1,0 +1,12 @@
+# Keep .git so runtime git fetch is incremental.
+node_modules
+var/cache
+var/logs
+data/db/wallabag.sqlite
+data/assets
+vendor
+web/build
+web/assets
+docker/php/env
+.env.local
+.env.test.local

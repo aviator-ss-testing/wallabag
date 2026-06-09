@@ -22,56 +22,69 @@ t "Starting Redis..."
 redis-cli ping >/dev/null 2>&1 || redis-server --daemonize yes
 t "Redis ready"
 
-# Diff against the SHA the image was built from to detect what changed on
-# the branch. This lets us skip composer/yarn/build when nothing relevant
-# changed, cutting preview launch time for typical runs.
-#
-# Fallback: if /code/.preview-image-sha doesn't exist (image was built with
-# an older Dockerfile that didn't bake it in), diff against origin/master
-# instead. This still detects runbook changes correctly since runbooks branch
-# off master.
-IMAGE_SHA=""
-if [ -f /code/.preview-image-sha ]; then
-  IMAGE_SHA=$(cat /code/.preview-image-sha)
-elif git -C /code rev-parse --verify origin/master >/dev/null 2>&1; then
-  IMAGE_SHA=$(git -C /code rev-parse origin/master)
-  t "  (no baked SHA — diffing against origin/master)"
-fi
-CHANGED_FILES=""
-if [ -n "$IMAGE_SHA" ]; then
-  CHANGED_FILES=$(git -C /code diff --name-only "$IMAGE_SHA" HEAD 2>/dev/null || echo "")
-fi
-# If we still have no reference point, assume everything might have changed
-# and rebuild the frontend unconditionally (safe fallback).
-FORCE_REBUILD="false"
-if [ -z "$IMAGE_SHA" ]; then
-  FORCE_REBUILD="true"
-  t "  (no reference SHA — forcing full rebuild)"
-fi
+# The template image pre-installs deps and a seed DB into $DEPS_CACHE. That
+# dir lives outside /code, so it survives the fresh `git clone` the preview
+# system does into /code on every launch. We seed the freshly-cloned workspace
+# from it here — copying is far faster than a cold composer/yarn install — and
+# only fall back to a real install when the cache is absent or the branch
+# changed the lockfiles.
+DEPS_CACHE="/opt/wallabag-deps"
 
-t "Checking for dependency changes..."
-if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^composer\.(json|lock)$'; then
-  t "  installing PHP dependencies"
-  composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# e2b runs this script as root; composer refuses to run plugins as root
+# without this. The seeded vendor came from a root build, so installs need it.
+export COMPOSER_ALLOW_SUPERUSER=1
+
+# Strategy: seed deps from the cache (a plain copy, fast and engine-check-free),
+# then *try* to reconcile to the repo's exact lockfile. The reconcile is
+# best-effort — if it fails (e.g. the image's toolchain doesn't match the
+# repo's engine requirements) we keep the seeded deps so the preview still
+# boots rather than dying on a `set -e`.
+t "Setting up PHP dependencies..."
+if [ ! -d /code/vendor ] && [ -d "$DEPS_CACHE/vendor" ]; then
+  t "  seeding vendor/ from $DEPS_CACHE"
+  cp -a "$DEPS_CACHE/vendor" /code/vendor
+fi
+if [ ! -d /code/vendor ] || ! cmp -s /code/composer.lock "$DEPS_CACHE/composer.lock" 2>/dev/null; then
+  t "  reconciling composer deps to repo lockfile"
+  composer install --no-interaction --prefer-dist --optimize-autoloader \
+    || t "  WARN: composer install failed — continuing with seeded vendor/"
 else
-  t "  composer unchanged — skipping"
+  t "  vendor/ matches cache"
 fi
 
-if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^(package\.json|yarn\.lock)$'; then
-  t "  installing Node dependencies"
-  yarn install --frozen-lockfile
+t "Setting up Node dependencies..."
+if [ ! -d /code/node_modules ] && [ -d "$DEPS_CACHE/node_modules" ]; then
+  t "  seeding node_modules/ from $DEPS_CACHE"
+  cp -a "$DEPS_CACHE/node_modules" /code/node_modules
+fi
+if [ ! -d /code/node_modules ] || ! cmp -s /code/yarn.lock "$DEPS_CACHE/yarn.lock" 2>/dev/null; then
+  t "  reconciling node deps to repo lockfile"
+  yarn install --frozen-lockfile \
+    || t "  WARN: yarn install failed — continuing with seeded node_modules/"
 else
-  t "  yarn unchanged — skipping"
+  t "  node_modules/ matches cache"
 fi
 
+# Rebuild the frontend so the branch's asset/template changes are reflected.
+# Best-effort for the same reason as above.
 t "Building frontend..."
-if [ "$FORCE_REBUILD" = "true" ] || echo "$CHANGED_FILES" | grep -qE '^(assets/|webpack\.config\.js|package\.json|templates/)'; then
-  t "  rebuilding frontend"
-  yarn build:dev
-else
-  t "  frontend unchanged — skipping"
-fi
+yarn build:dev || t "  WARN: yarn build:dev failed — serving prebuilt assets"
 t "Frontend build done"
+
+# Seed the prebuilt sqlite DB (baked into $DEPS_CACHE). Without it every
+# request 500s on missing tables (e.g. wallabag_internal_setting).
+t "Setting up database..."
+mkdir -p /code/data/db
+if [ ! -f /code/data/db/wallabag.sqlite ]; then
+  if [ -f "$DEPS_CACHE/data/db/wallabag.sqlite" ]; then
+    t "  seeding wallabag.sqlite from $DEPS_CACHE"
+    cp "$DEPS_CACHE/data/db/wallabag.sqlite" /code/data/db/wallabag.sqlite
+  else
+    t "  no baked DB — running migrations"
+    php bin/console doctrine:migrations:migrate --no-interaction --env=dev || true
+  fi
+fi
+chmod 666 /code/data/db/wallabag.sqlite 2>/dev/null || true
 
 # PREVIEW_URL is injected by Aviator's preview system with the sandbox's
 # public URL. Wallabag uses WALLABAG_BASE_URL for asset/link generation.
@@ -81,9 +94,25 @@ t "Starting wallabag web server on port 8000..."
 # Same approach as local development: Symfony's built-in web server in dev
 # mode. The Symfony Web Debug Toolbar is disabled via app/config/config_dev.yml
 # (web_profiler.toolbar: false) so the UI is clean.
+mkdir -p /var/log/app
 setsid php bin/console server:run 0.0.0.0:8000 --env=dev \
   < /dev/null > /var/log/app/wallabag.log 2>&1 &
 disown
-t "Wallabag started"
+
+# Don't report "ready" until the port actually accepts connections — the old
+# script logged success unconditionally, masking a server that died on boot.
+t "Waiting for server on port 8000..."
+for i in $(seq 1 20); do
+  if curl -sf -o /dev/null http://127.0.0.1:8000/; then
+    t "Wallabag is up on port 8000"
+    break
+  fi
+  if [ "$i" -eq 20 ]; then
+    t "ERROR: wallabag did not come up on port 8000 — last log lines:"
+    tail -40 /var/log/app/wallabag.log | tee -a "$LOG" || true
+    exit 1
+  fi
+  sleep 1
+done
 
 t "Preview environment ready."

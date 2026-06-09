@@ -1,0 +1,18 @@
+# This is a config for E2B sandbox template.
+# You can use template ID (spl96v4ahrwfpd4y5idi) or template name (aviator-staging-account-1-id-3) to create a sandbox:
+
+# Python SDK
+# from e2b import Sandbox, AsyncSandbox
+# sandbox = Sandbox.create("aviator-staging-account-1-id-3") # Sync sandbox
+# sandbox = await AsyncSandbox.create("aviator-staging-account-1-id-3") # Async sandbox
+
+# JS SDK
+# import { Sandbox } from 'e2b'
+# const sandbox = await Sandbox.create('aviator-staging-account-1-id-3')
+
+team_id = "b7021a8c-0dc0-4514-acb1-377d3dd1d8e3"
+memory_mb = 4_096
+cpu_count = 2
+dockerfile = "docker/preview/Dockerfile"
+template_name = "aviator-staging-account-1-id-3"
+template_id = "spl96v4ahrwfpd4y5idi"

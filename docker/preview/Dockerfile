@@ -1,80 +1,80 @@
-# Wallabag Preview Environment Docker image for e2b sandboxes.
+# Wallabag preview dependency-cache image for e2b sandboxes.
 #
-# Design notes:
-# - Single-stage build so caches match between build-time and runtime.
-# - .git is shipped with the image (via Dockerfile.dockerignore) so runtime
-#   git fetch is an incremental delta, not a full clone.
-# - SQLite seed DB with ~13 articles baked in so the app has content.
-# - Uses Symfony's built-in dev server (`bin/console server:run`) — same
-#   as local development. No nginx, no php-fpm, no user permission
-#   issues. Toolbar is disabled via app/config/config_dev.yml.
+# This image is a DEPENDENCY CACHE, not the running app. Aviator's preview
+# system git-clones the repo fresh into /code on every launch, which wipes
+# anything baked into /code. So we stage installed deps + a seed DB under
+# /opt/wallabag-deps (outside /code, so it survives the clone), and
+# .aviator/scripts/preview-setup.sh copies them into the freshly-cloned
+# workspace at runtime.
+#
+# Build via the e2b CLI:  bash docker/preview/build.sh e2b   (config: e2b.toml)
+#
+# Node 24 satisfies both the runbook branches (engines >=20) and upstream
+# master (>=24), so a preview works regardless of which the sandbox checks out.
 
-FROM php:8.2-fpm-bookworm
+FROM php:8.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG NODE_VERSION=20
+ARG NODE_VERSION=24
 
 # System packages + Node.js
-RUN apt-get update && apt-get install -y \
-      ca-certificates curl gnupg lsb-release git git-lfs openssl \
-      redis-server \
+RUN apt-get update \
+    && apt-get install -y \
+        ca-certificates curl gnupg lsb-release openssl software-properties-common \
+        git git-lfs \
+        libmcrypt-dev libicu-dev libpq-dev libxml2-dev libpng-dev libjpeg-dev \
+        libwebp-dev libsqlite3-dev imagemagick libmagickwand-dev libtidy-dev \
+        libonig-dev libzip-dev libfreetype6-dev zlib1g-dev \
+        build-essential unzip \
+        postgresql postgresql-client redis-server \
     && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get update && apt-get install -y \
-      libicu-dev libpq-dev libxml2-dev libpng-dev libjpeg-dev libwebp-dev \
-      libsqlite3-dev libmagickwand-dev libtidy-dev libonig-dev libzip-dev \
-      libfreetype6-dev zlib1g-dev libxslt1-dev \
-      nodejs \
+    && apt-get install -y nodejs \
+    && npm install -g yarn \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions wallabag needs. -j parallelizes across CPU cores
-# (otherwise each extension compiles single-threaded and this step takes 5-10min).
+# PHP extensions wallabag needs. -j parallelizes the compile across cores.
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j "$(nproc)" \
-      pdo_sqlite pdo_pgsql pdo_mysql mbstring intl gd exif opcache \
-      pcntl tidy xsl zip bcmath
+        bcmath gd gettext iconv intl mbstring opcache \
+        pdo pdo_mysql pdo_pgsql pdo_sqlite sockets tidy zip
 
-# Sockets — required by php-amqplib. Separate RUN so the big gd/intl compile above stays cached.
-RUN docker-php-ext-install -j "$(nproc)" sockets
-
-# Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+RUN printf "no\nno\nno\n" | pecl install redis-6.1.0 \
+    && printf "\n" | pecl install imagick-3.7.0 \
+    && docker-php-ext-enable redis imagick
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Yarn
-RUN npm install -g yarn
+# Coding-agent tooling (claude CLI installs to /root/.local/bin — symlink it
+# onto PATH so the agent can find it).
+RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62 \
+    && ln -sf /root/.local/bin/claude /usr/local/bin/claude \
+    && git lfs install
 
-# Dev tools required by the coding sandbox (claude CLI, etc.)
-RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62
-# claude installs to /root/.local/bin which isn't in the default PATH.
-# Symlink to /usr/local/bin so the coding agent can find it.
-RUN ln -sf /root/.local/bin/claude /usr/local/bin/claude
-RUN bash -l -c "git lfs install"
-RUN npm install -g npm@latest
+# --- Dependency cache (survives the runtime clone into /code) ----------------
+ENV DEPS_CACHE=/opt/wallabag-deps
+WORKDIR ${DEPS_CACHE}
 
-WORKDIR /code
+# Copy the full source (minus vendor/node_modules, which Dockerfile.dockerignore
+# excludes). composer's autoload generation scans classmap entries like
+# app/AppKernel.php, so the source must be present — a manifests-only copy fails.
+COPY . ${DEPS_CACHE}/
 
-# Copy full wallabag source including .git (Dockerfile.dockerignore allows .git)
-COPY . /code/
+# PHP deps. --no-scripts skips wallabag's post-install hooks (they need runtime
+# app config); the autoloader is still generated, so vendor/autoload_runtime.php
+# exists. NOT --optimize: a build-time optimized classmap would bake absolute
+# paths; the runtime resolves classes relative to /code instead. Composer runs
+# anonymously against GitHub (the repo's .composer-auth.json token is stale and
+# makes auth *fail*; public packages download fine without it).
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
+        --no-interaction --no-progress --no-scripts --prefer-dist
 
-# Record the SHA the image was built from so runtime can diff against it to
-# detect what actually changed on the branch (and skip composer/yarn when
-# nothing relevant changed).
-RUN git -C /code rev-parse HEAD > /code/.preview-image-sha
+# Node deps.
+RUN yarn install --frozen-lockfile
 
-# Install PHP dependencies (including dev deps — we run in --env=dev at runtime).
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
-
-# Install Node deps and build frontend
-RUN yarn install --frozen-lockfile && yarn build:dev
-
-# Copy the seed sqlite DB into the data dir
-RUN mkdir -p /code/data/db \
-    && cp /code/docker/preview/seed.sqlite /code/data/db/wallabag.sqlite \
-    && chmod 666 /code/data/db/wallabag.sqlite
-
-# Required directories for runtime logs
-RUN mkdir -p /var/log/app
-
-EXPOSE 8000
+# Seed sqlite DB so previews have schema + content immediately. Placed under
+# the cache (not /code) so it survives the runtime clone; the setup script
+# seeds /code/data/db/wallabag.sqlite from it.
+RUN mkdir -p data/db \
+    && cp docker/preview/seed.sqlite data/db/wallabag.sqlite \
+    && chmod 666 data/db/wallabag.sqlite
