@@ -51,8 +51,12 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62 \
 
 # --- Bake repo + deps + frontend build + seed DB into /code -----------------
 # Clone the actual (public) preview repo so /code's origin matches at runtime
-# and the launch fetch fast-path triggers. --depth 1 keeps .git small.
-RUN git clone --depth 1 --branch master \
+# and the launch fetch fast-path triggers. --filter=blob:none (matching the
+# runtime's own clone) keeps it lean while preserving the full-branch refspec
+# (+refs/heads/*:refs/remotes/origin/*) — a shallow/--single-branch clone would
+# only track master, so the runtime's `git fetch origin <runbook-branch>` would
+# never create origin/<branch> and `git switch` would fail with "invalid reference".
+RUN git clone --filter=blob:none \
         https://github.com/aviator-ss-testing/wallabag.git /code
 WORKDIR /code
 
