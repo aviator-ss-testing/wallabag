@@ -23,9 +23,9 @@
         {% endif %}
         <div class="wbg-list-card__meta-row">
             {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
-            <span><span class="material-icons">today</span> {{ entry.createdAt|date('Y-m-d') }}</span>
+            <span><i class="material-icons">today</i> {{ entry.createdAt|date('Y-m-d') }}</span>
             {% if entry.publishedBy is not empty %}
-                <span><span class="material-icons">person</span> {{ entry.publishedBy|join(', ') }}</span>
+                <span><i class="material-icons">person</i> {{ entry.publishedBy|join(', ') }}</span>
             {% endif %}
         </div>
     </div>
