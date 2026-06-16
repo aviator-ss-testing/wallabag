@@ -15,12 +15,31 @@
         {% else %}
             <span class="wbg-list-card__title">{{ entry.title|striptags|default('entry.default_title'|trans)|raw }}</span>
         {% endif %}
-        <div class="wbg-list-card__domain">
-            <a href="{{ entry.url|e }}" target="_blank" title="{{ entry.domainName|removeWww }}">{{ entry.domainName|removeWww }}</a>
-        </div>
-    </div>
 
-    <div class="wbg-list-meta">
-        {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+        {% if entry.content %}
+            <p class="wbg-list-card__excerpt">{{ entry.content|striptags|slice(0, 400) }}</p>
+        {% endif %}
+
+        <div class="wbg-list-card__meta-row">
+            <span class="wbg-list-card__meta-item">
+                <i class="material-icons">timer</i>
+                {% set reading_time = entry.readingTime / app.user.config.readingSpeed * 200 %}
+                {% if reading_time > 0 %}
+                    {{ 'entry.list.reading_time_minutes_short'|trans({'%readingTime%': reading_time|round}) }}
+                {% else %}
+                    {{ 'entry.list.reading_time_less_one_minute_short'|trans|raw }}
+                {% endif %}
+            </span>
+            <span class="wbg-list-card__meta-item">
+                <i class="material-icons">today</i>
+                {{ entry.createdAt|date('Y-m-d') }}
+            </span>
+            {% if entry.publishedBy is not empty %}
+                <span class="wbg-list-card__meta-item">
+                    <i class="material-icons">person</i>
+                    {{ entry.publishedBy }}
+                </span>
+            {% endif %}
+        </div>
     </div>
 </div>
