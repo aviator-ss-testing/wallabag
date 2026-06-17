@@ -37,7 +37,7 @@
             {% if entry.publishedBy is not empty %}
                 <span class="wbg-list-card__meta-item">
                     <i class="material-icons">person</i>
-                    {{ entry.publishedBy }}
+                    {% for author in entry.publishedBy %}{{ author|raw }}{% if not loop.last %}, {% endif %}{% endfor %}
                 </span>
             {% endif %}
         </div>
