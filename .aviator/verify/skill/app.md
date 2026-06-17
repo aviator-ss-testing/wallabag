@@ -1,24 +1,12 @@
 ---
-description: How to drive the Wallabag preview environment for verification.
+description: How to drive the Wallabag preview app — what it is, getting around (routes, layout), and what's observable as evidence.
 ---
 
-# Wallabag verify skill
+# Driving the Wallabag preview
 
 Wallabag is a self-hosted "read it later" / bookmarking app. The preview serves
 the full web UI at the preview URL. Everything past the login screen requires
-authentication.
-
-## Logging in
-
-The app gates all content behind a login form at `/login` — you'll be
-redirected there on first navigation. Before anything else:
-
-1. Navigate to the preview URL.
-2. Fill the username field with `{{ secrets.wallabag_admin_email }}`.
-3. Fill the password field with `{{ secrets.wallabag_admin_password }}`.
-4. Click the "Log in" button.
-
-After login you land on the article list (the unread "entries" view).
+authentication — see the `verify-auth` skill for the sign-in flow.
 
 ## Getting around
 
