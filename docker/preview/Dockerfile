@@ -15,6 +15,10 @@ FROM php:8.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG NODE_VERSION=24
+# Where the repo is baked, and which repo. Defaults keep the historical /code
+# layout; override REPO_DIR to test a custom repo_root.
+ARG REPO_DIR=/code
+ARG REPO_URL=https://github.com/aviator-ss-testing/wallabag.git
 
 # System packages + Node.js
 RUN apt-get update \
@@ -49,16 +53,15 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s 2.1.62 \
     && ln -sf /root/.local/bin/claude /usr/local/bin/claude \
     && git lfs install
 
-# --- Bake repo + deps + frontend build + seed DB into /code -----------------
-# Clone the actual (public) preview repo so /code's origin matches at runtime
-# and the launch fetch fast-path triggers. --filter=blob:none (matching the
-# runtime's own clone) keeps it lean while preserving the full-branch refspec
-# (+refs/heads/*:refs/remotes/origin/*) — a shallow/--single-branch clone would
-# only track master, so the runtime's `git fetch origin <runbook-branch>` would
-# never create origin/<branch> and `git switch` would fail with "invalid reference".
-RUN git clone --filter=blob:none \
-        https://github.com/aviator-ss-testing/wallabag.git /code
-WORKDIR /code
+# --- Bake repo + deps + frontend build + seed DB into REPO_DIR ---------------
+# Clone the preview repo so its origin matches at runtime and the launch fetch
+# fast-path triggers. --filter=blob:none (matching the runtime's own clone) keeps
+# it lean while preserving the full-branch refspec (+refs/heads/*:refs/remotes/origin/*)
+# — a shallow/--single-branch clone would only track master, so the runtime's
+# `git fetch origin <runbook-branch>` would never create origin/<branch> and
+# `git switch` would fail with "invalid reference".
+RUN git clone --filter=blob:none "${REPO_URL}" "${REPO_DIR}"
+WORKDIR ${REPO_DIR}
 
 # PHP deps. --no-scripts skips wallabag's post-install hooks (they need runtime
 # config); the autoloader (incl. vendor/autoload_runtime.php) is still generated.
@@ -74,7 +77,7 @@ RUN yarn build:dev
 COPY docker/preview/seed.sqlite data/db/wallabag.sqlite
 RUN chmod 666 data/db/wallabag.sqlite
 
-# Record the baked commit OUTSIDE /code — a file inside /code would be deleted by
+# Record the baked commit OUTSIDE the repo — a file inside it would be deleted by
 # the launch `git clean -fd`. preview-setup.sh diffs the runbook branch against
 # this to decide whether anything actually needs reinstalling/rebuilding.
-RUN git -C /code rev-parse HEAD > /preview-image-sha
+RUN git -C "${REPO_DIR}" rev-parse HEAD > /preview-image-sha

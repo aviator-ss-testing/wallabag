@@ -12,9 +12,9 @@ t() {
 
 t "Starting wallabag preview setup"
 
-# e2b runs the script as root. Make git operations trust /code.
-git config --global --add safe.directory /code
-cd /code
+# The preview launch runs this from the repo root (wherever the image keeps it),
+# so don't hardcode a path — trust and operate in the current directory.
+git config --global --add safe.directory "$(pwd)"
 
 t "Starting Redis..."
 redis-cli ping >/dev/null 2>&1 || redis-server --daemonize yes
