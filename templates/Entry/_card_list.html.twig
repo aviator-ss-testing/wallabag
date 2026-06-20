@@ -18,9 +18,15 @@
         <div class="wbg-list-card__domain">
             <a href="{{ entry.url|e }}" target="_blank" title="{{ entry.domainName|removeWww }}">{{ entry.domainName|removeWww }}</a>
         </div>
-    </div>
-
-    <div class="wbg-list-meta">
-        {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+        {% if entry.content is not empty %}
+            <p class="wbg-list-card__excerpt">{{ entry.content|striptags|slice(0, 200) }}</p>
+        {% endif %}
+        <div class="wbg-list-card__meta-row">
+            {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+            <span><i class="material-icons">today</i> {{ entry.createdAt|date('Y-m-d') }}</span>
+            {% if entry.publishedBy is not empty %}
+                <span><i class="material-icons">person</i> {{ entry.publishedBy|join(', ') }}</span>
+            {% endif %}
+        </div>
     </div>
 </div>
