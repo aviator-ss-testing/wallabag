@@ -8,19 +8,39 @@
     </div>
 
     <div class="wbg-list-body">
-        {% if is_granted('VIEW', entry) %}
-            <a href="{{ path('view', {'id': entry.id}) }}" class="wbg-list-card__title" title="{{ entry.title|striptags|e('html_attr') }}">
-                {{ entry.title|striptags|default('entry.default_title'|trans)|raw }}
-            </a>
-        {% else %}
-            <span class="wbg-list-card__title">{{ entry.title|striptags|default('entry.default_title'|trans)|raw }}</span>
-        {% endif %}
-        <div class="wbg-list-card__domain">
-            <a href="{{ entry.url|e }}" target="_blank" title="{{ entry.domainName|removeWww }}">{{ entry.domainName|removeWww }}</a>
+        <div class="wbg-list-body__top">
+            {% if is_granted('VIEW', entry) %}
+                <a href="{{ path('view', {'id': entry.id}) }}" class="wbg-list-card__title" title="{{ entry.title|striptags|e('html_attr') }}">
+                    {{ entry.title|striptags|default('entry.default_title'|trans)|raw }}
+                </a>
+            {% else %}
+                <span class="wbg-list-card__title">{{ entry.title|striptags|default('entry.default_title'|trans)|raw }}</span>
+            {% endif %}
+            {% if entry.content %}
+                <p class="wbg-list-card__excerpt">{{ entry.content|striptags|slice(0, 400) }}</p>
+            {% endif %}
         </div>
-    </div>
 
-    <div class="wbg-list-meta">
-        {% include "Entry/_reading_time.html.twig" with {'entry': entry} only %}
+        <div class="wbg-list-card__meta-row">
+            <span class="wbg-list-card__meta-item">
+                {% set reading_time = entry.readingTime / app.user.config.readingSpeed * 200 %}
+                <i class="material-icons">timer</i>
+                {% if reading_time > 0 %}
+                    <span>{{ 'entry.list.reading_time_minutes_short'|trans({'%readingTime%': reading_time|round}) }}</span>
+                {% else %}
+                    <span>{{ 'entry.list.reading_time_less_one_minute_short'|trans|raw }}</span>
+                {% endif %}
+            </span>
+            <span class="wbg-list-card__meta-item">
+                <i class="material-icons">today</i>
+                <span>{{ entry.createdAt|date('Y-m-d') }}</span>
+            </span>
+            {% if entry.publishedBy is not empty %}
+                <span class="wbg-list-card__meta-item">
+                    <i class="material-icons">person</i>
+                    <span>{% for author in entry.publishedBy %}{{ author|raw }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+                </span>
+            {% endif %}
+        </div>
     </div>
 </div>
