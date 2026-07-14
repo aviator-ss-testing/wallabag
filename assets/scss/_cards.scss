@@ -207,7 +207,8 @@ main {
 .wbg-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 56rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -221,7 +222,7 @@ main {
 
 .wbg-list-card {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.75rem;
   padding: 0.75rem;
   background: variables.$color-surface;
@@ -239,8 +240,8 @@ main {
 }
 
 .wbg-list-thumb {
-  width: 3rem;
-  height: 3rem;
+  width: 12rem;
+  height: 9rem;
   border-radius: variables.$radius-sm;
   flex-shrink: 0;
   background-size: cover;
@@ -260,7 +261,8 @@ main {
 .wbg-list-body {
   flex: 1;
   min-width: 0;
-  margin-left: 0.25rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .wbg-list-meta {
@@ -270,6 +272,34 @@ main {
   gap: 0.25rem;
   font-size: 0.75rem;
   color: variables.$color-text-muted;
+}
+
+.wbg-list-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: variables.$color-text-muted;
+  flex: 1;
+  margin: 0.25rem 0 0;
+}
+
+.wbg-list-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+  margin-top: auto;
+  padding-top: 0.5rem;
+
+  .material-icons {
+    font-size: 1em;
+    line-height: 1;
+    vertical-align: middle;
+  }
 }
 
 /* ==========================================================================
