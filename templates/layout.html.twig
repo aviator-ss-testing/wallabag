@@ -116,6 +116,8 @@
             {% endif %}
         </div>
 
+        <button class="wbg-hamburger-btn" data-topbar-target="hamburger" data-action="topbar#toggleMobileMenu" aria-label="Open navigation menu" aria-expanded="false"><i class="material-icons">menu</i></button>
+
         <div class="wbg-topbar__right">
             <a href="{{ path('new') }}" data-action="topbar#showAddUrl:prevent:stop" data-shortcuts-target="showAddUrl" title="{{ 'menu.top.add_new_entry'|trans }}">
                 <i class="material-icons">add</i>
