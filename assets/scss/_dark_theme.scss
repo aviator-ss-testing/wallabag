@@ -162,6 +162,13 @@
     border-color: #2e2b27;
   }
 
+  @media (max-width: 639px) {
+    .wbg-topbar--menu-open .wbg-topbar__right {
+      background: #1e1c19;
+      border-color: #2e2b27;
+    }
+  }
+
   .wbg-filter-menu,
   .wbg-filter-menu .dropdown-content {
     background: #1e1c19;
