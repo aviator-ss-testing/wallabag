@@ -55,7 +55,7 @@
             <div class="wbg-topbar-divider"></div>
 
             {% if is_granted('LIST_ENTRIES') %}
-                <button class="wbg-filter-btn dropdown-trigger" data-controller="materialize--dropdown" data-target="dropdown-filter">
+                <button class="wbg-filter-btn dropdown-trigger" data-controller="materialize--dropdown materialize--tooltip" data-target="dropdown-filter" data-materialize--tooltip-position-value="bottom" data-materialize--tooltip-enter-delay-value="50" data-tooltip="{{ 'menu.top.filter_articles'|trans }}">
                     {% if active_route == 'starred' %}
                         {{ 'menu.left.starred'|trans }} ({{ count_entries('starred') }})
                     {% elseif active_route == 'archive' %}

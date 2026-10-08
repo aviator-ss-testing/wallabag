@@ -42,6 +42,7 @@ menu:
         add_new_entry: Add a new entry
         search: Search
         filter_entries: Filter entries
+        filter_articles: Filter articles
         export: Export
         random_entry: Jump to a random entry from that list
         account: 'My account'
