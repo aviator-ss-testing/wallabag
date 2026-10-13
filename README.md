@@ -69,3 +69,5 @@ Copyright © 2013-current Nicolas Lœuillet <nicolas@loeuillet.org>
 
 This work is free. You can redistribute it and/or modify it under the
 terms of the MIT License. See the [COPYING.md](./COPYING.md) file for more details.
+
+<!-- e2e: verify preview selection -->
