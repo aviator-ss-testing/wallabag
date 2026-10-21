@@ -207,10 +207,11 @@ main {
 .wbg-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-width: 56rem;
 }
 
 .wbg-list__item {
@@ -221,7 +222,7 @@ main {
 
 .wbg-list-card {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.75rem;
   padding: 0.75rem;
   background: variables.$color-surface;
@@ -239,8 +240,8 @@ main {
 }
 
 .wbg-list-thumb {
-  width: 3rem;
-  height: 3rem;
+  width: 12rem;
+  height: 9rem;
   border-radius: variables.$radius-sm;
   flex-shrink: 0;
   background-size: cover;
@@ -261,15 +262,45 @@ main {
   flex: 1;
   min-width: 0;
   margin-left: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .wbg-list-meta {
-  flex-shrink: 0;
+  display: none;
+}
+
+.wbg-list-card__excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  font-size: 0.875rem;
+  color: variables.$color-text-muted;
+  margin: 0;
+}
+
+.wbg-list-card__meta {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   font-size: 0.75rem;
   color: variables.$color-text-muted;
+  margin-top: auto;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .material-icons {
+    font-size: 1rem;
+    vertical-align: middle;
+  }
 }
 
 /* ==========================================================================
