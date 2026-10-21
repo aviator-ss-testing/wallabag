@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['addUrl', 'addUrlInput', 'search', 'searchInput', 'actions'];
+  static targets = ['addUrl', 'addUrlInput', 'search', 'searchInput', 'actions', 'hamburger'];
 
   showAddUrl() {
     this.actionsTarget.style.display = 'none';
@@ -27,5 +27,10 @@ export default class extends Controller {
     this.actionsTarget.style.display = 'flex';
     this.addUrlTarget.style.display = 'none';
     this.searchTarget.style.display = 'none';
+  }
+
+  toggleMobileMenu() {
+    const isOpen = this.element.classList.toggle('wbg-topbar--menu-open');
+    this.hamburgerTarget.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   }
 }

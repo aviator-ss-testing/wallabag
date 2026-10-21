@@ -159,6 +159,48 @@ main {
   background: rgba(0, 0, 0, 0.04);
 }
 
+.wbg-hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  border: none;
+  color: variables.$color-text-muted;
+  cursor: pointer;
+
+  &:hover {
+    color: variables.$color-text;
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+@media (max-width: 639px) {
+  .wbg-hamburger-btn {
+    display: inline-flex;
+  }
+
+  .wbg-topbar__right {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .wbg-topbar--menu-open .wbg-topbar__right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: variables.$color-surface;
+    border-bottom: 1px solid variables.$color-border;
+  }
+}
+
 .wbg-view-toggle {
   background: rgba(0, 0, 0, 0.04);
   border-radius: variables.$radius-sm;
