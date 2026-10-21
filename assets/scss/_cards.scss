@@ -207,10 +207,11 @@ main {
 .wbg-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  max-width: 56rem;
 }
 
 .wbg-list__item {
@@ -221,9 +222,9 @@ main {
 
 .wbg-list-card {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
   background: variables.$color-surface;
   border: 1px solid variables.$color-border;
   border-radius: variables.$radius-sm;
@@ -239,8 +240,8 @@ main {
 }
 
 .wbg-list-thumb {
-  width: 3rem;
-  height: 3rem;
+  width: 12rem;
+  height: 9rem;
   border-radius: variables.$radius-sm;
   flex-shrink: 0;
   background-size: cover;
@@ -260,16 +261,53 @@ main {
 .wbg-list-body {
   flex: 1;
   min-width: 0;
-  margin-left: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.wbg-list-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  display: block;
+  color: variables.$color-accent;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wbg-list-card__domain {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: variables.$color-text-muted;
+}
+
+.wbg-list-card__excerpt {
+  font-size: 0.875rem;
+  color: variables.$color-text-muted;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.375rem;
+}
+
+.wbg-list-card__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: variables.$color-text-muted;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .wbg-list-meta {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: variables.$color-text-muted;
+  display: none;
 }
 
 /* ==========================================================================
